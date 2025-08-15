@@ -69,11 +69,51 @@ namespace MeowTextReader
             if (!string.IsNullOrEmpty(FolderPath) && Directory.Exists(FolderPath))
             {
                 var dirs = Directory.GetDirectories(FolderPath)
+                    .Where(d =>
+                    {
+                        try
+                        {
+                            var di = new DirectoryInfo(d);
+                            return !di.Attributes.HasFlag(FileAttributes.Hidden) &&
+                                   (di.Attributes & FileAttributes.Directory) != 0 &&
+                                   HasAccess(d);
+                        }
+                        catch
+                        {
+                            return false;
+                        }
+                    })
                     .Select(d => new FileItem { Name = Path.GetFileName(d), IsFolder = true });
                 var txts = Directory.GetFiles(FolderPath, "*.txt")
+                    .Where(f =>
+                    {
+                        try
+                        {
+                            var fi = new FileInfo(f);
+                            return !fi.Attributes.HasFlag(FileAttributes.Hidden);
+                        }
+                        catch
+                        {
+                            return false;
+                        }
+                    })
                     .Select(f => new FileItem { Name = Path.GetFileName(f), IsFolder = false });
                 foreach (var item in dirs.Concat(txts))
                     FolderItems.Add(item);
+            }
+        }
+
+        private static bool HasAccess(string path)
+        {
+            try
+            {
+                // 嘗試列舉內容以測試權限
+                Directory.GetFiles(path, "*", SearchOption.TopDirectoryOnly);
+                return true;
+            }
+            catch
+            {
+                return false;
             }
         }
 
