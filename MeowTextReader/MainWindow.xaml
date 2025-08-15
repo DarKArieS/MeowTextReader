@@ -8,54 +8,5 @@
     Title="MeowTextReader"
     mc:Ignorable="d">
 
-    <Window.SystemBackdrop>
-        <MicaBackdrop />
-    </Window.SystemBackdrop>
-
-    <Grid x:Name="RootGrid" Margin="20">
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="*" />
-        </Grid.RowDefinitions>
-
-        <StackPanel Grid.Row="0">
-            <StackPanel Margin="0,0,0,8" Orientation="Horizontal">
-                <Button
-                    Width="120"
-                    Margin="0,0,0,0"
-                    Click="Back_Click"
-                    Content="返回上一頁" />
-                <Button
-                    Width="120"
-                    Margin="8,0,0,0"
-                    Click="SelectFolder_Click"
-                    Content="選擇資料夾" />
-            </StackPanel>
-            <TextBlock FontSize="14" Text="{Binding FolderPath, Mode=OneWay}" />
-        </StackPanel>
-
-        <ScrollViewer
-            Grid.Row="1"
-            Margin="0,10,0,0"
-            HorizontalScrollBarVisibility="Visible"
-            VerticalScrollBarVisibility="Visible">
-            <ListView
-                x:Name="FolderListView"
-                IsItemClickEnabled="True"
-                ItemClick="FolderListView_ItemClick"
-                ItemsSource="{Binding FolderItems}">
-                <ListView.ItemTemplate>
-                    <DataTemplate>
-                        <Border
-                            Margin="0,0,0,4"
-                            Padding="4,2"
-                            BorderBrush="Gray"
-                            BorderThickness="0,0,0,1">
-                            <TextBlock FontWeight="{Binding IsFolder, Converter={StaticResource FolderBoldConverter}}" Text="{Binding Name}" />
-                        </Border>
-                    </DataTemplate>
-                </ListView.ItemTemplate>
-            </ListView>
-        </ScrollViewer>
-    </Grid>
+    <Frame x:Name="MainFrame" />
 </Window>
