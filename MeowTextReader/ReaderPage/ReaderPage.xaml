@@ -16,7 +16,7 @@
             <Button Content="返回" Width="80" Margin="0,0,0,10" Click="BackButton_Click"/>
             <TextBlock Text="{Binding FileName}" TextWrapping="Wrap" Margin="8,0,0,0"  VerticalAlignment="Center" TextAlignment="Start"/>
         </StackPanel>
-        <ListView Grid.Row="1" ItemsSource="{Binding FileLines}" SelectionMode="None">
+        <ListView x:Name="FileListView" Grid.Row="1" ItemsSource="{Binding FileLines}" SelectionMode="None">
             <ListView.ItemTemplate>
                 <DataTemplate>
                     <TextBlock Text="{Binding}" TextWrapping="WrapWholeWords" IsTextSelectionEnabled="True" FontSize="20" />

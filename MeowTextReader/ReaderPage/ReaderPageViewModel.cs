@@ -46,6 +46,23 @@ namespace MeowTextReader.ReaderPage
             }
         }
 
+        public void SaveScrollOffset(double offset)
+        {
+            if (!string.IsNullOrEmpty(FileName))
+            {
+                MainRepo.Instance.UpdateHistory(FileName, offset);
+            }
+        }
+
+        public double? GetSavedScrollOffset()
+        {
+            if (!string.IsNullOrEmpty(FileName))
+            {
+                return MainRepo.Instance.GetHistoryScrollOffset(FileName);
+            }
+            return null;
+        }
+
         public event PropertyChangedEventHandler? PropertyChanged;
         protected void OnPropertyChanged([CallerMemberName] string? propertyName = null)
         {
