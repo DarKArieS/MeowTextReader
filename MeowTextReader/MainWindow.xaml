@@ -8,5 +8,9 @@
     Title="MeowTextReader"
     mc:Ignorable="d">
 
+    <Window.SystemBackdrop>
+        <MicaBackdrop />
+    </Window.SystemBackdrop>
+    
     <Frame x:Name="MainFrame" />
 </Window>

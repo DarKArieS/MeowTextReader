@@ -7,8 +7,14 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d">
 
-    <Grid>
-        <!-- Add your ReaderPage UI here -->
-        <TextBlock Text="Reader Page" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+    <Grid Padding="20">
+        <StackPanel>
+            <TextBlock Text="開啟檔案: " FontWeight="Bold"/>
+            <TextBlock Text="{Binding FilePath}" TextWrapping="Wrap" Margin="0,0,0,10"/>
+            <TextBlock Text="檔案內容: " FontWeight="Bold"/>
+            <ScrollViewer Height="400">
+                <TextBlock Text="{Binding FileContent}" TextWrapping="Wrap"/>
+            </ScrollViewer>
+        </StackPanel>
     </Grid>
 </Page>
