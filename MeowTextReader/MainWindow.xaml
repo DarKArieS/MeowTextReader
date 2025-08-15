@@ -15,23 +15,21 @@
 
     <Grid Margin="20" x:Name="RootGrid">
         <StackPanel>
-            <Button Content="選擇資料夾" Click="SelectFolder_Click" Width="120" Margin="0,0,0,10"/>
+            <StackPanel Orientation="Horizontal">
+                <Button Content="返回上一頁" Click="Back_Click" Width="100" Margin="0,0,8,0"/>
+                <Button Content="選擇資料夾" Click="SelectFolder_Click" Width="120" Margin="0,0,0,10"/>
+            </StackPanel>
             <TextBlock Text="{Binding FolderPath, Mode=OneWay}" FontSize="14"/>
             <ScrollViewer Height="300" Margin="0,10,0,0">
-                <ItemsControl ItemsSource="{Binding FolderItems}">
-                    <ItemsControl.ItemTemplate>
+                <ListView x:Name="FolderListView" ItemsSource="{Binding FolderItems}" SelectionMode="None" IsItemClickEnabled="True" ItemClick="FolderListView_ItemClick">
+                    <ListView.ItemTemplate>
                         <DataTemplate>
                             <Border BorderBrush="Gray" BorderThickness="0,0,0,1" Margin="0,0,0,4" Padding="4,2">
                                 <TextBlock Text="{Binding Name}" FontWeight="{Binding IsFolder, Converter={StaticResource FolderBoldConverter}}"/>
                             </Border>
                         </DataTemplate>
-                    </ItemsControl.ItemTemplate>
-                    <ItemsControl.ItemsPanel>
-                        <ItemsPanelTemplate>
-                            <StackPanel/>
-                        </ItemsPanelTemplate>
-                    </ItemsControl.ItemsPanel>
-                </ItemsControl>
+                    </ListView.ItemTemplate>
+                </ListView>
             </ScrollViewer>
         </StackPanel>
     </Grid>

@@ -43,5 +43,39 @@ namespace MeowTextReader
                 ViewModel.FolderPath = folder.Path;
             }
         }
+
+        private void Back_Click(object sender, RoutedEventArgs e)
+        {
+            ViewModel.BackCommand.Execute(null);
+        }
+
+        private void ListViewItem_PointerPressed(object sender, Microsoft.UI.Xaml.Input.PointerRoutedEventArgs e)
+        {
+            if (sender is ListViewItem item && item.DataContext is FileItem fileItem && fileItem.IsFolder)
+            {
+                ViewModel.FolderItemClickCommand.Execute(fileItem);
+            }
+        }
+
+        private void FolderListView_PointerPressed(object sender, Microsoft.UI.Xaml.Input.PointerRoutedEventArgs e)
+        {
+            var originalSource = e.OriginalSource as Microsoft.UI.Xaml.FrameworkElement;
+            while (originalSource != null && originalSource.DataContext is not FileItem)
+            {
+                originalSource = originalSource.Parent as Microsoft.UI.Xaml.FrameworkElement;
+            }
+            if (originalSource?.DataContext is FileItem fileItem && fileItem.IsFolder)
+            {
+                ViewModel.FolderItemClickCommand.Execute(fileItem);
+            }
+        }
+
+        private void FolderListView_ItemClick(object sender, ItemClickEventArgs e)
+        {
+            if (e.ClickedItem is FileItem fileItem && fileItem.IsFolder)
+            {
+                ViewModel.FolderItemClickCommand.Execute(fileItem);
+            }
+        }
     }
 }
