@@ -1,6 +1,5 @@
-using Microsoft.UI.Xaml.Data;
-using Microsoft.UI.Xaml;
 using Microsoft.UI.Text;
+using Microsoft.UI.Xaml.Data;
 
 namespace MeowTextReader
 {
