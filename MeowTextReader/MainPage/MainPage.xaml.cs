@@ -9,7 +9,7 @@ namespace MeowTextReader
 {
     public sealed partial class MainPage : Page
     {
-        private MainViewModel ViewModel { get; set; } = new MainViewModel();
+        private MainPageViewModel ViewModel { get; set; } = new MainPageViewModel();
 
         public MainPage()
         {
