@@ -14,7 +14,7 @@ namespace MeowTextReader
         public bool IsFolder { get; set; }
     }
 
-    public class MainViewModel : INotifyPropertyChanged
+    public class MainPageViewModel : INotifyPropertyChanged
     {
         public string? FolderPath
         {
@@ -35,7 +35,7 @@ namespace MeowTextReader
         public ICommand FolderItemClickCommand { get; }
         public ICommand BackCommand { get; }
 
-        public MainViewModel()
+        public MainPageViewModel()
         {
             FolderItemClickCommand = new RelayCommand<FileItem>(OnFolderItemClick);
             BackCommand = new RelayCommand(BackToParent);
