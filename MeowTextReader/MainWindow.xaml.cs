@@ -12,9 +12,9 @@ using Microsoft.UI.Xaml.Media;
 using Microsoft.UI.Xaml.Navigation;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
-
-// To learn more about WinUI, the WinUI project structure,
-// and more about our project templates, see: http://aka.ms/winui-project-info.
+using Windows.Storage.Pickers;
+using Windows.Storage;
+using System.Threading.Tasks;
 
 namespace MeowTextReader
 {
@@ -23,9 +23,25 @@ namespace MeowTextReader
     /// </summary>
     public sealed partial class MainWindow : Window
     {
+        private MainViewModel ViewModel { get; set; } = new MainViewModel();
+
         public MainWindow()
         {
-            InitializeComponent();
+            this.InitializeComponent();
+            RootGrid.DataContext = ViewModel;
+        }
+
+        private async void SelectFolder_Click(object sender, RoutedEventArgs e)
+        {
+            var picker = new FolderPicker();
+            var hwnd = WinRT.Interop.WindowNative.GetWindowHandle(this);
+            WinRT.Interop.InitializeWithWindow.Initialize(picker, hwnd);
+            picker.FileTypeFilter.Add("*");
+            StorageFolder folder = await picker.PickSingleFolderAsync();
+            if (folder != null)
+            {
+                ViewModel.FolderPath = folder.Path;
+            }
         }
     }
 }
