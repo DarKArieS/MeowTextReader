@@ -1,4 +1,5 @@
 using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml;
 
 namespace MeowTextReader.ReaderPage
 {
@@ -10,6 +11,12 @@ namespace MeowTextReader.ReaderPage
         {
             this.InitializeComponent();
             this.DataContext = ViewModel;
+        }
+
+        private void BackButton_Click(object sender, RoutedEventArgs e)
+        {
+            // ¦^¨ì MainPage
+            Frame.Navigate(typeof(MeowTextReader.MainPage));
         }
     }
 }

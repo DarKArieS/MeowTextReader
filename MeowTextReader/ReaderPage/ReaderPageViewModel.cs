@@ -7,19 +7,18 @@ namespace MeowTextReader.ReaderPage
 {
     public class ReaderPageViewModel : INotifyPropertyChanged
     {
-        private string? _filePath;
+        private string? _fileName;
         private string? _fileContent;
 
-        public string? FilePath
+        public string? FileName
         {
-            get => _filePath;
+            get => _fileName;
             set
             {
-                if (_filePath != value)
+                if (_fileName != value)
                 {
-                    _filePath = value;
+                    _fileName = value;
                     OnPropertyChanged();
-                    LoadFileContent();
                 }
             }
         }
@@ -39,14 +38,19 @@ namespace MeowTextReader.ReaderPage
 
         public ReaderPageViewModel()
         {
-            FilePath = MainRepo.Instance.OpenFilePath;
+            var path = MainRepo.Instance.OpenFilePath;
+            if (!string.IsNullOrEmpty(path))
+            {
+                FileName = Path.GetFileNameWithoutExtension(path);
+                LoadFileContent(path);
+            }
         }
 
-        private void LoadFileContent()
+        private void LoadFileContent(string? path)
         {
-            if (!string.IsNullOrEmpty(FilePath) && File.Exists(FilePath))
+            if (!string.IsNullOrEmpty(path) && File.Exists(path))
             {
-                FileContent = File.ReadAllText(FilePath);
+                FileContent = File.ReadAllText(path);
             }
             else
             {
