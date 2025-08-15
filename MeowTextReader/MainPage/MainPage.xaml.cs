@@ -4,6 +4,7 @@ using Windows.Storage;
 using Windows.Storage.Pickers;
 using System.Threading.Tasks;
 using System;
+using MeowTextReader.ReaderPage;
 
 namespace MeowTextReader
 {
@@ -37,9 +38,20 @@ namespace MeowTextReader
 
         private void FolderListView_ItemClick(object sender, ItemClickEventArgs e)
         {
-            if (e.ClickedItem is FileItem fileItem && fileItem.IsFolder)
+            if (e.ClickedItem is FileItem fileItem)
             {
-                ViewModel.FolderItemClickCommand.Execute(fileItem);
+                if (fileItem.IsFolder)
+                {
+                    ViewModel.FolderItemClickCommand.Execute(fileItem);
+                }
+                else if (fileItem.Name.EndsWith(".txt", StringComparison.OrdinalIgnoreCase))
+                {
+                    // 將完整路徑存入 MainRepo appConfig.json
+                    var filePath = System.IO.Path.Combine(ViewModel.FolderPath ?? string.Empty, fileItem.Name);
+                    MainRepo.Instance.SetOpenFilePath(filePath);
+                    // 跳轉到 ReaderPage
+                    Frame.Navigate(typeof(MeowTextReader.ReaderPage.ReaderPage));
+                }
             }
         }
     }

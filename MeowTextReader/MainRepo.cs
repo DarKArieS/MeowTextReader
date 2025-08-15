@@ -16,6 +16,7 @@ namespace MeowTextReader
         private class AppConfig
         {
             public string? folderPath { get; set; }
+            public string? OpenFilePath { get; set; } // ·s¼W OpenFilePath ÄÝ©Ê
         }
 
         private MainRepo()
@@ -44,6 +45,24 @@ namespace MeowTextReader
                     SaveConfig();
                 }
             }
+        }
+
+        public string? OpenFilePath
+        {
+            get => _config.OpenFilePath;
+            set
+            {
+                if (_config.OpenFilePath != value)
+                {
+                    _config.OpenFilePath = value;
+                    SaveConfig();
+                }
+            }
+        }
+
+        public void SetOpenFilePath(string path)
+        {
+            OpenFilePath = path;
         }
 
         private void SaveConfig()
