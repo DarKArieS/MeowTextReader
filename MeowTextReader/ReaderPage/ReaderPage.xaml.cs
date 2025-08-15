@@ -1,10 +1,9 @@
-using Microsoft.UI.Xaml.Controls;
-using Microsoft.UI.Xaml;
-using System.Threading.Tasks;
 using System;
-using Microsoft.UI.Xaml.Media;
-using Microsoft.UI.Xaml;
 using System.Threading;
+using System.Threading.Tasks;
+using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Media;
 
 namespace MeowTextReader.ReaderPage
 {
@@ -13,7 +12,7 @@ namespace MeowTextReader.ReaderPage
         private ReaderPageViewModel ViewModel { get; set; } = new ReaderPageViewModel();
         private ScrollViewer? _scrollViewer;
         private Timer? _debounceTimer;
-        private const int DebounceMilliseconds = 1000;
+        private const int DebounceMilliseconds = 500;
 
         public ReaderPage()
         {
@@ -21,20 +20,31 @@ namespace MeowTextReader.ReaderPage
             this.DataContext = ViewModel;
             this.Loaded += ReaderPage_Loaded;
             this.Unloaded += ReaderPage_Unloaded;
+            FileListView.Loaded += FileListView_Loaded;
         }
 
         private void ReaderPage_Loaded(object sender, RoutedEventArgs e)
         {
             _scrollViewer = FindScrollViewer(FileListView);
-            if (_scrollViewer != null)
-            {
-                // 還原歷史捲動位置
-                var offset = ViewModel.GetSavedScrollOffset();
-                if (offset.HasValue)
-                {
-                    _scrollViewer.ChangeView(null, offset.Value, null);
-                }
+        }
 
+        private void FileListView_Loaded(object sender, RoutedEventArgs e)
+        {
+            _scrollViewer = FindScrollViewer(FileListView);
+
+            // 還原捲動位置，確保 ListView 已產生內容
+            var offset = ViewModel.GetSavedScrollOffset();
+            if (_scrollViewer != null && offset.HasValue)
+            {
+                DispatcherQueue.TryEnqueue(async () =>
+                {
+                    await Task.Delay(1000); // 等待 UI 完全產生
+                    _scrollViewer.ChangeView(null, (double)offset.Value, null, true);
+                    _scrollViewer.ViewChanged += ScrollViewer_ViewChanged;
+                });
+            }
+            else
+            {
                 _scrollViewer.ViewChanged += ScrollViewer_ViewChanged;
             }
         }
@@ -44,6 +54,7 @@ namespace MeowTextReader.ReaderPage
             if (_scrollViewer != null)
                 _scrollViewer.ViewChanged -= ScrollViewer_ViewChanged;
             _debounceTimer?.Dispose();
+            FileListView.Loaded -= FileListView_Loaded;
         }
 
         private void ScrollViewer_ViewChanged(object sender, ScrollViewerViewChangedEventArgs e)
