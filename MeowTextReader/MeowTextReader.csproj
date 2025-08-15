@@ -15,6 +15,9 @@
   <ItemGroup>
     <None Remove="MainPage.xaml" />
   </ItemGroup>
+  <ItemGroup>
+    <Page Remove="ReaderPage\ReaderPage.xaml" />
+  </ItemGroup>
 
   <ItemGroup>
     <Content Include="Assets\SplashScreen.scale-200.png" />
@@ -43,9 +46,17 @@
     <PackageReference Include="Microsoft.WindowsAppSDK" Version="1.7.250606001" />
   </ItemGroup>
   <ItemGroup>
+    <None Update="ReaderPage\ReaderPage.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
     <Page Update="MainPage.xaml">
       <Generator>MSBuild:Compile</Generator>
     </Page>
+  </ItemGroup>
+  <ItemGroup>
+    <Page Include="ReaderPage\ReaderPage.xaml" />
   </ItemGroup>
 
   <!--
