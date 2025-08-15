@@ -1,6 +1,8 @@
 using System;
 using System.IO;
 using System.Text.Json;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace MeowTextReader
 {
@@ -13,10 +15,17 @@ namespace MeowTextReader
         private readonly string _saveFilePath;
         private AppConfig _config = new();
 
+        public class HistoryItem
+        {
+            public string? FileName { get; set; }
+            public double ScrollOffset { get; set; }
+        }
+
         private class AppConfig
         {
             public string? folderPath { get; set; }
-            public string? OpenFilePath { get; set; } // ·s¼W OpenFilePath ÄÝ©Ê
+            public string? OpenFilePath { get; set; }
+            public List<HistoryItem> history { get; set; } = new();
         }
 
         private MainRepo()
@@ -58,6 +67,29 @@ namespace MeowTextReader
                     SaveConfig();
                 }
             }
+        }
+
+        public List<HistoryItem> History => _config.history;
+
+        public void UpdateHistory(string fileName, double scrollOffset)
+        {
+            var item = _config.history.FirstOrDefault(h => h.FileName == fileName);
+            if (item == null)
+            {
+                item = new HistoryItem { FileName = fileName, ScrollOffset = scrollOffset };
+                _config.history.Add(item);
+            }
+            else
+            {
+                item.ScrollOffset = scrollOffset;
+            }
+            SaveConfig();
+        }
+
+        public double? GetHistoryScrollOffset(string fileName)
+        {
+            var item = _config.history.FirstOrDefault(h => h.FileName == fileName);
+            return item?.ScrollOffset;
         }
 
         public void SetOpenFilePath(string path)
