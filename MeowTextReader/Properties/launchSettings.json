@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "MeowTextReader (Package)": {
+      "commandName": "MsixPackage"
+    },
+    "MeowTextReader (Unpackaged)": {
+      "commandName": "Project"
+    }
+  }
+}
