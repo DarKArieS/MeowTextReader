@@ -13,7 +13,10 @@
         <MicaBackdrop />
     </Window.SystemBackdrop>
 
-    <Grid>
-
+    <Grid Margin="20" x:Name="RootGrid">
+        <StackPanel>
+            <Button Content="選擇資料夾" Click="SelectFolder_Click" Width="120" Margin="0,0,0,10"/>
+            <TextBlock Text="{Binding FolderPath, Mode=OneWay}" FontSize="14"/>
+        </StackPanel>
     </Grid>
 </Window>
