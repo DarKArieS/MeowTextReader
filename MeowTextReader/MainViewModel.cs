@@ -1,56 +1,53 @@
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
-using System.Text;
-using System.IO;
 using System;
+using System.Collections.ObjectModel;
+using System.IO;
+using System.Linq;
 
 namespace MeowTextReader
 {
+    public class FileItem
+    {
+        public string Name { get; set; } = string.Empty;
+        public bool IsFolder { get; set; }
+    }
+
     public class MainViewModel : INotifyPropertyChanged
     {
-        private string? _folderPath;
         public string? FolderPath
         {
-            get => _folderPath;
+            get => MainRepo.Instance.FolderPath;
             set
             {
-                if (_folderPath != value)
+                if (MainRepo.Instance.FolderPath != value)
                 {
-                    _folderPath = value;
+                    MainRepo.Instance.FolderPath = value;
                     OnPropertyChanged();
-                    SaveFolderPath();
+                    LoadFolderItems();
                 }
             }
         }
 
-        private static string GetSaveFilePath()
-        {
-            string folder = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
-            string appFolder = Path.Combine(folder, "MeowTextReader");
-            if (!Directory.Exists(appFolder))
-                Directory.CreateDirectory(appFolder);
-            return Path.Combine(appFolder, "folderpath.txt");
-        }
+        public ObservableCollection<FileItem> FolderItems { get; } = new();
 
         public MainViewModel()
         {
-            LoadFolderPath();
+            OnPropertyChanged(nameof(FolderPath));
+            LoadFolderItems();
         }
 
-        private void SaveFolderPath()
+        private void LoadFolderItems()
         {
-            if (!string.IsNullOrEmpty(_folderPath))
+            FolderItems.Clear();
+            if (!string.IsNullOrEmpty(FolderPath) && Directory.Exists(FolderPath))
             {
-                File.WriteAllText(GetSaveFilePath(), _folderPath, Encoding.UTF8);
-            }
-        }
-
-        private void LoadFolderPath()
-        {
-            string path = GetSaveFilePath();
-            if (File.Exists(path))
-            {
-                _folderPath = File.ReadAllText(path, Encoding.UTF8);
+                var dirs = Directory.GetDirectories(FolderPath)
+                    .Select(d => new FileItem { Name = Path.GetFileName(d), IsFolder = true });
+                var txts = Directory.GetFiles(FolderPath, "*.txt")
+                    .Select(f => new FileItem { Name = Path.GetFileName(f), IsFolder = false });
+                foreach (var item in dirs.Concat(txts))
+                    FolderItems.Add(item);
             }
         }
 
