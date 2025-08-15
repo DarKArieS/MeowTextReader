@@ -1,9 +1,7 @@
-using System.ComponentModel;
-using System.Runtime.CompilerServices;
-using MeowTextReader;
-using System.IO;
-using System.Threading.Tasks;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
+using System.IO;
+using System.Runtime.CompilerServices;
 
 namespace MeowTextReader.ReaderPage
 {
@@ -31,16 +29,16 @@ namespace MeowTextReader.ReaderPage
             if (!string.IsNullOrEmpty(path))
             {
                 FileName = Path.GetFileNameWithoutExtension(path);
-                _ = LoadFileLinesAsync(path);
+                LoadFileLines(path);
             }
         }
 
-        private async Task LoadFileLinesAsync(string? path)
+        private void LoadFileLines(string? path)
         {
             FileLines.Clear();
             if (!string.IsNullOrEmpty(path) && File.Exists(path))
             {
-                var lines = await File.ReadAllLinesAsync(path);
+                var lines = File.ReadAllLines(path);
                 foreach (var line in lines)
                     FileLines.Add(line);
             }
@@ -54,7 +52,7 @@ namespace MeowTextReader.ReaderPage
             }
         }
 
-        public double? GetSavedScrollOffset()
+        public int? GetSavedScrollOffset()
         {
             if (!string.IsNullOrEmpty(FileName))
             {

@@ -18,7 +18,7 @@ namespace MeowTextReader
         public class HistoryItem
         {
             public string? FileName { get; set; }
-            public double ScrollOffset { get; set; }
+            public int ScrollOffset { get; set; }
         }
 
         private class AppConfig
@@ -73,20 +73,21 @@ namespace MeowTextReader
 
         public void UpdateHistory(string fileName, double scrollOffset)
         {
+            int offsetInt = (int)Math.Round(scrollOffset);
             var item = _config.history.FirstOrDefault(h => h.FileName == fileName);
             if (item == null)
             {
-                item = new HistoryItem { FileName = fileName, ScrollOffset = scrollOffset };
+                item = new HistoryItem { FileName = fileName, ScrollOffset = offsetInt };
                 _config.history.Add(item);
             }
             else
             {
-                item.ScrollOffset = scrollOffset;
+                item.ScrollOffset = offsetInt;
             }
             SaveConfig();
         }
 
-        public double? GetHistoryScrollOffset(string fileName)
+        public int? GetHistoryScrollOffset(string fileName)
         {
             var item = _config.history.FirstOrDefault(h => h.FileName == fileName);
             return item?.ScrollOffset;
