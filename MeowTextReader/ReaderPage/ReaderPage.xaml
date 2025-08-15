@@ -16,8 +16,12 @@
             <Button Content="返回" Width="80" Margin="0,0,0,10" Click="BackButton_Click"/>
             <TextBlock Text="{Binding FileName}" TextWrapping="Wrap" Margin="8,0,0,0"  VerticalAlignment="Center" TextAlignment="Start"/>
         </StackPanel>
-        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Visible">
-            <TextBlock Text="{Binding FileContent}" TextWrapping="Wrap"/>
-        </ScrollViewer>
+        <ListView Grid.Row="1" ItemsSource="{Binding FileLines}" IsItemClickEnabled="False">
+            <ListView.ItemTemplate>
+                <DataTemplate>
+                    <TextBlock Text="{Binding}" TextWrapping="WrapWholeWords"/>
+                </DataTemplate>
+            </ListView.ItemTemplate>
+        </ListView>
     </Grid>
 </Page>

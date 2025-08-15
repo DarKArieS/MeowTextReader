@@ -2,13 +2,15 @@ using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using MeowTextReader;
 using System.IO;
+using System.Threading.Tasks;
+using System.Collections.ObjectModel;
 
 namespace MeowTextReader.ReaderPage
 {
     public class ReaderPageViewModel : INotifyPropertyChanged
     {
         private string? _fileName;
-        private string? _fileContent;
+        public ObservableCollection<string> FileLines { get; } = new();
 
         public string? FileName
         {
@@ -23,38 +25,24 @@ namespace MeowTextReader.ReaderPage
             }
         }
 
-        public string? FileContent
-        {
-            get => _fileContent;
-            private set
-            {
-                if (_fileContent != value)
-                {
-                    _fileContent = value;
-                    OnPropertyChanged();
-                }
-            }
-        }
-
         public ReaderPageViewModel()
         {
             var path = MainRepo.Instance.OpenFilePath;
             if (!string.IsNullOrEmpty(path))
             {
                 FileName = Path.GetFileNameWithoutExtension(path);
-                LoadFileContent(path);
+                _ = LoadFileLinesAsync(path);
             }
         }
 
-        private void LoadFileContent(string? path)
+        private async Task LoadFileLinesAsync(string? path)
         {
+            FileLines.Clear();
             if (!string.IsNullOrEmpty(path) && File.Exists(path))
             {
-                FileContent = File.ReadAllText(path);
-            }
-            else
-            {
-                FileContent = null;
+                var lines = await File.ReadAllLinesAsync(path);
+                foreach (var line in lines)
+                    FileLines.Add(line);
             }
         }
 
