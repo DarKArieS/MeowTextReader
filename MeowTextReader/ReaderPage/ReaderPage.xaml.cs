@@ -5,8 +5,6 @@ using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Media;
 using Microsoft.UI.Xaml.Media.Animation;
-using Microsoft.UI.Xaml.Media;
-using MeowTextReader.ReaderPage;
 
 namespace MeowTextReader.ReaderPage
 {
@@ -167,7 +165,7 @@ namespace MeowTextReader.ReaderPage
             }
         }
 
-        private void SlideOut_Completed(object sender, object e)
+        private void SlideOut_Completed(object? sender, object e)
         {
             TopPanel.Visibility = Visibility.Collapsed;
             var tt = TopPanel.RenderTransform as TranslateTransform;
