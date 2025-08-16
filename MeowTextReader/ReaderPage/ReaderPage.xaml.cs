@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Media;
+using Microsoft.UI.Xaml.Controls.Primitives;
 
 namespace MeowTextReader.ReaderPage
 {
@@ -13,6 +14,8 @@ namespace MeowTextReader.ReaderPage
         private ScrollViewer? _scrollViewer;
         private Timer? _debounceTimer;
         private const int DebounceMilliseconds = 500;
+        private bool _isSliderUpdating = false;
+        private bool _isScrollViewerUpdating = false;
 
         public ReaderPage()
         {
@@ -28,24 +31,43 @@ namespace MeowTextReader.ReaderPage
             _scrollViewer = FindScrollViewer(FileListView);
         }
 
+        private void UpdateSliderPercentText()
+        {
+            if (_scrollViewer != null && ScrollSlider.Maximum > 0)
+            {
+                double percent = (ScrollSlider.Value / ScrollSlider.Maximum) * 100.0;
+                if (percent < 0) percent = 0;
+                if (percent > 100) percent = 100;
+                SliderPercentText.Text = $"({percent:0}%)";
+            }
+            else
+            {
+                SliderPercentText.Text = "0%";
+            }
+        }
+
         private void FileListView_Loaded(object sender, RoutedEventArgs e)
         {
             _scrollViewer = FindScrollViewer(FileListView);
 
-            // 還原捲動位置，確保 ListView 已產生內容
+            if (_scrollViewer != null)
+            {
+                ScrollSlider.Minimum = 0;
+                ScrollSlider.Maximum = _scrollViewer.ScrollableHeight > 0 ? _scrollViewer.ScrollableHeight : 1;
+                ScrollSlider.Value = _scrollViewer.VerticalOffset;
+                _scrollViewer.ViewChanged += ScrollViewer_ViewChanged;
+                UpdateSliderPercentText();
+            }
+
             var offset = ViewModel.GetSavedScrollOffset();
             if (_scrollViewer != null && offset.HasValue)
             {
                 DispatcherQueue.TryEnqueue(async () =>
                 {
-                    await Task.Delay(1000); // 等待 UI 完全產生
+                    await Task.Delay(1000);
                     _scrollViewer.ChangeView(null, (double)offset.Value, null, true);
-                    _scrollViewer.ViewChanged += ScrollViewer_ViewChanged;
+                    UpdateSliderPercentText();
                 });
-            }
-            else
-            {
-                _scrollViewer.ViewChanged += ScrollViewer_ViewChanged;
             }
         }
 
@@ -59,13 +81,32 @@ namespace MeowTextReader.ReaderPage
 
         private void ScrollViewer_ViewChanged(object sender, ScrollViewerViewChangedEventArgs e)
         {
-            // Reset debounce timer
             _debounceTimer?.Dispose();
             _debounceTimer = new Timer(_ =>
             {
                 var offset = _scrollViewer?.VerticalOffset ?? 0;
                 ViewModel.SaveScrollOffset(offset);
             }, null, DebounceMilliseconds, Timeout.Infinite);
+
+            if (_scrollViewer != null && !_isSliderUpdating)
+            {
+                _isScrollViewerUpdating = true;
+                ScrollSlider.Maximum = _scrollViewer.ScrollableHeight > 0 ? _scrollViewer.ScrollableHeight : 1;
+                ScrollSlider.Value = _scrollViewer.VerticalOffset;
+                UpdateSliderPercentText();
+                _isScrollViewerUpdating = false;
+            }
+        }
+
+        private void ScrollSlider_ValueChanged(object sender, Microsoft.UI.Xaml.Controls.Primitives.RangeBaseValueChangedEventArgs e)
+        {
+            if (_scrollViewer != null && !_isScrollViewerUpdating)
+            {
+                _isSliderUpdating = true;
+                _scrollViewer.ChangeView(null, e.NewValue, null, true);
+                UpdateSliderPercentText();
+                _isSliderUpdating = false;
+            }
         }
 
         private void BackButton_Click(object sender, RoutedEventArgs e)
