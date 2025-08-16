@@ -12,6 +12,11 @@ namespace MeowTextReader
         ReaderPage
     }
 
+    public class ReaderSetting // 移出 MainRepo class，作為獨立 public class
+    {
+        public double FontSize { get; set; } = 20.0;
+    }
+
     public class MainRepo
     {
         private static readonly Lazy<MainRepo> _instance = new(() => new MainRepo());
@@ -33,6 +38,7 @@ namespace MeowTextReader
             public string? folderPath { get; set; }
             public string? OpenFilePath { get; set; }
             public string? LastPage { get; set; } // serialized as string
+            public ReaderSetting ReaderSetting { get; set; } = new ReaderSetting();
             public List<HistoryItem> history { get; set; } = new();
         }
 
@@ -95,6 +101,29 @@ namespace MeowTextReader
                 {
                     _config.LastPage = value.ToString();
                     _lastPageCache = value;
+                    SaveConfig();
+                }
+            }
+        }
+
+        private ReaderSetting _readerSettingCache => _config.ReaderSetting ??= new ReaderSetting();
+        public ReaderSetting ReaderSettingObj
+        {
+            get => _readerSettingCache;
+            set
+            {
+                _config.ReaderSetting = value;
+                SaveConfig();
+            }
+        }
+        public double FontSize
+        {
+            get => _readerSettingCache.FontSize;
+            set
+            {
+                if (_readerSettingCache.FontSize != value)
+                {
+                    _readerSettingCache.FontSize = value;
                     SaveConfig();
                 }
             }

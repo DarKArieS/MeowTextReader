@@ -62,7 +62,7 @@
             <ListView.ItemTemplate>
                 <DataTemplate>
                     <TextBlock
-                        FontSize="20"
+                        FontSize="{Binding DataContext.FontSize, ElementName=FileListView, FallbackValue=20}"
                         IsTextSelectionEnabled="True"
                         Text="{Binding}"
                         TextWrapping="WrapWholeWords" />
