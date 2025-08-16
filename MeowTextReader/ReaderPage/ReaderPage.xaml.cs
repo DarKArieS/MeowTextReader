@@ -4,6 +4,8 @@ using System.Threading.Tasks;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Media;
+using Microsoft.UI.Xaml.Media.Animation;
+using Microsoft.UI.Xaml.Media;
 using MeowTextReader.ReaderPage;
 
 namespace MeowTextReader.ReaderPage
@@ -32,18 +34,18 @@ namespace MeowTextReader.ReaderPage
             _scrollViewer = FindScrollViewer(FileListView);
         }
 
-        private void UpdateSliderPercentText()
+        private void UpdateTitlePercentText()
         {
             if (_scrollViewer != null && ScrollSlider.Maximum > 0)
             {
                 double percent = (ScrollSlider.Value / ScrollSlider.Maximum) * 100.0;
                 if (percent < 0) percent = 0;
                 if (percent > 100) percent = 100;
-                SliderPercentText.Text = $"({percent:0.00}%)";
+                TitleText.Text = ViewModel.FileName + $"({percent:0.00}%)";
             }
             else
             {
-                SliderPercentText.Text = "0%";
+                TitleText.Text = "0%";
             }
         }
 
@@ -57,7 +59,7 @@ namespace MeowTextReader.ReaderPage
                 ScrollSlider.Maximum = _scrollViewer.ScrollableHeight > 0 ? _scrollViewer.ScrollableHeight : 1;
                 ScrollSlider.Value = _scrollViewer.VerticalOffset;
                 _scrollViewer.ViewChanged += ScrollViewer_ViewChanged;
-                UpdateSliderPercentText();
+                UpdateTitlePercentText();
             }
 
             var offset = ViewModel.GetSavedScrollOffset();
@@ -70,7 +72,7 @@ namespace MeowTextReader.ReaderPage
                     FileListView.IsEnabled = false;
                     await Task.Delay(1000);
                     _scrollViewer.ChangeView(null, (double)offset.Value, null, true);
-                    UpdateSliderPercentText();
+                    UpdateTitlePercentText();
                     LoadingRing.IsActive = false;
                     LoadingRing.Visibility = Visibility.Collapsed;
                     FileListView.IsEnabled = true;
@@ -100,7 +102,7 @@ namespace MeowTextReader.ReaderPage
                 _isScrollViewerUpdating = true;
                 ScrollSlider.Maximum = _scrollViewer.ScrollableHeight > 0 ? _scrollViewer.ScrollableHeight : 1;
                 ScrollSlider.Value = _scrollViewer.VerticalOffset;
-                UpdateSliderPercentText();
+                UpdateTitlePercentText();
                 _isScrollViewerUpdating = false;
             }
         }
@@ -111,7 +113,7 @@ namespace MeowTextReader.ReaderPage
             {
                 _isSliderUpdating = true;
                 _scrollViewer.ChangeView(null, e.NewValue, null, true);
-                UpdateSliderPercentText();
+                UpdateTitlePercentText();
                 _isSliderUpdating = false;
             }
         }
@@ -138,6 +140,40 @@ namespace MeowTextReader.ReaderPage
         private void SettingsButton_Click(object sender, RoutedEventArgs e)
         {
             SettingsTeachingTip.IsOpen = true;
+        }
+
+        private void FileListView_Tapped(object sender, Microsoft.UI.Xaml.Input.TappedRoutedEventArgs e)
+        {
+            if (TopPanel.Visibility == Visibility.Visible)
+            {
+                var slideOut = (Storyboard)this.Resources["SlideOutTopPanel"];
+                // 設定動畫 To 為 -TopPanel.ActualHeight
+                var anim = (DoubleAnimation)slideOut.Children[0];
+                anim.To = -TopPanel.ActualHeight;
+                slideOut.Completed += SlideOut_Completed;
+                slideOut.Begin();
+            }
+            else
+            {
+                // 先將 TopPanel 移到畫面外
+                var tt = TopPanel.RenderTransform as TranslateTransform;
+                if (tt != null) tt.Y = -TopPanel.ActualHeight;
+                TopPanel.Visibility = Visibility.Visible;
+                var slideIn = (Storyboard)this.Resources["SlideInTopPanel"];
+                var anim = (DoubleAnimation)slideIn.Children[0];
+                anim.From = -TopPanel.ActualHeight;
+                anim.To = 0;
+                slideIn.Begin();
+            }
+        }
+
+        private void SlideOut_Completed(object sender, object e)
+        {
+            TopPanel.Visibility = Visibility.Collapsed;
+            var tt = TopPanel.RenderTransform as TranslateTransform;
+            if (tt != null) tt.Y = 0; // reset for next show
+            var slideOut = (Storyboard)this.Resources["SlideOutTopPanel"];
+            slideOut.Completed -= SlideOut_Completed;
         }
     }
 }

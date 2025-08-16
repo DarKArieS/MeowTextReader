@@ -7,35 +7,76 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d">
 
+    <Page.Resources>
+        <Storyboard x:Key="SlideOutTopPanel">
+            <DoubleAnimation
+                Storyboard.TargetName="TopPanel"
+                Storyboard.TargetProperty="(UIElement.RenderTransform).(TranslateTransform.Y)"
+                To="-100"
+                Duration="0:0:0.2" />
+        </Storyboard>
+        <Storyboard x:Key="SlideInTopPanel">
+            <DoubleAnimation
+                Storyboard.TargetName="TopPanel"
+                Storyboard.TargetProperty="(UIElement.RenderTransform).(TranslateTransform.Y)"
+                To="0"
+                Duration="0:0:0.2" />
+        </Storyboard>
+    </Page.Resources>
+
     <Grid>
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="*" />
-        </Grid.RowDefinitions>
-        <StackPanel Grid.Row="0" Orientation="Vertical">
+        <ListView
+            x:Name="FileListView"
+            Background="{Binding BackgroundBrush}"
+            ItemsSource="{Binding FileLines}"
+            SelectionMode="None"
+            Tapped="FileListView_Tapped">
+            <ListView.ItemTemplate>
+                <DataTemplate>
+                    <TextBlock
+                        FontSize="{Binding DataContext.FontSize, ElementName=FileListView, FallbackValue=20}"
+                        Foreground="{Binding DataContext.ForegroundBrush, ElementName=FileListView}"
+                        IsTextSelectionEnabled="False"
+                        Text="{Binding}"
+                        TextWrapping="WrapWholeWords" />
+                </DataTemplate>
+            </ListView.ItemTemplate>
+        </ListView>
+
+        <StackPanel
+            x:Name="TopPanel"
+            Height="Auto"
+            Padding="8"
+            VerticalAlignment="Top"
+            Background="{ThemeResource ApplicationPageBackgroundThemeBrush}"
+            Opacity="1"
+            Orientation="Vertical">
+            <StackPanel.RenderTransform>
+                <TranslateTransform Y="0" />
+            </StackPanel.RenderTransform>
             <Grid>
                 <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
                     <ColumnDefinition Width="Auto" />
-                    <ColumnDefinition />
                 </Grid.ColumnDefinitions>
-                <StackPanel Grid.Column="0" Orientation="Horizontal">
+                <Grid Grid.Column="0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
                     <Button
+                        Grid.Column="0"
                         Width="80"
                         Margin="0,0,0,10"
                         Click="BackButton_Click"
                         Content="返回" />
                     <TextBlock
-                        Margin="8,0,0,0"
+                        x:Name="TitleText"
+                        Grid.Column="1"
+                        Margin="8,0,0,8"
                         VerticalAlignment="Center"
-                        Text="{Binding FileName}"
-                        TextAlignment="Start"
-                        TextWrapping="Wrap" />
-                    <TextBlock
-                        x:Name="SliderPercentText"
-                        Margin="8,0,0,0"
-                        VerticalAlignment="Center" />
-                </StackPanel>
+                        TextWrapping="WrapWholeWords" />
+                </Grid>
                 <Button
                     x:Name="SettingsButton"
                     Grid.Column="1"
@@ -53,24 +94,6 @@
                 Minimum="0"
                 ValueChanged="ScrollSlider_ValueChanged" />
         </StackPanel>
-
-        <ListView
-            x:Name="FileListView"
-            Grid.Row="2"
-            ItemsSource="{Binding FileLines}"
-            Background="{Binding BackgroundBrush}"
-            SelectionMode="None">
-            <ListView.ItemTemplate>
-                <DataTemplate>
-                    <TextBlock
-                        FontSize="{Binding DataContext.FontSize, ElementName=FileListView, FallbackValue=20}"
-                        Foreground="{Binding DataContext.ForegroundBrush, ElementName=FileListView}"
-                        IsTextSelectionEnabled="True"
-                        Text="{Binding}"
-                        TextWrapping="WrapWholeWords" />
-                </DataTemplate>
-            </ListView.ItemTemplate>
-        </ListView>
 
         <ProgressRing
             x:Name="LoadingRing"
