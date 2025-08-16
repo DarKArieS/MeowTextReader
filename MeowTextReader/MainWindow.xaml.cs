@@ -8,7 +8,16 @@ namespace MeowTextReader
         public MainWindow()
         {
             this.InitializeComponent();
-            MainFrame.Navigate(typeof(MainPage));
+            // 根據 appConfig 記錄的頁面決定啟動頁
+            var lastPage = MainRepo.Instance.LastPage;
+            if (lastPage == AppPage.ReaderPage)
+            {
+                MainFrame.Navigate(typeof(MeowTextReader.ReaderPage.ReaderPage));
+            }
+            else
+            {
+                MainFrame.Navigate(typeof(MainPage));
+            }
         }
     }
 }

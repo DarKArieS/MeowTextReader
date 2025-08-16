@@ -16,6 +16,7 @@ namespace MeowTextReader
         {
             this.InitializeComponent();
             this.RootGrid.DataContext = ViewModel;
+            MainRepo.Instance.LastPage = AppPage.MainPage;
         }
 
         private async void SelectFolder_Click(object sender, RoutedEventArgs e)

@@ -6,6 +6,12 @@ using System.Linq;
 
 namespace MeowTextReader
 {
+    public enum AppPage
+    {
+        MainPage,
+        ReaderPage
+    }
+
     public class MainRepo
     {
         private static readonly Lazy<MainRepo> _instance = new(() => new MainRepo());
@@ -14,6 +20,7 @@ namespace MeowTextReader
         private string? _folderPath;
         private readonly string _saveFilePath;
         private AppConfig _config = new();
+        private AppPage? _lastPageCache = null;
 
         public class HistoryItem
         {
@@ -25,6 +32,7 @@ namespace MeowTextReader
         {
             public string? folderPath { get; set; }
             public string? OpenFilePath { get; set; }
+            public string? LastPage { get; set; } // serialized as string
             public List<HistoryItem> history { get; set; } = new();
         }
 
@@ -64,6 +72,29 @@ namespace MeowTextReader
                 if (_config.OpenFilePath != value)
                 {
                     _config.OpenFilePath = value;
+                    SaveConfig();
+                }
+            }
+        }
+
+        public AppPage LastPage
+        {
+            get
+            {
+                if (_lastPageCache.HasValue) return _lastPageCache.Value;
+                if (Enum.TryParse<AppPage>(_config.LastPage, out var page))
+                {
+                    _lastPageCache = page;
+                    return page;
+                }
+                return AppPage.MainPage;
+            }
+            set
+            {
+                if (LastPage != value)
+                {
+                    _config.LastPage = value.ToString();
+                    _lastPageCache = value;
                     SaveConfig();
                 }
             }
