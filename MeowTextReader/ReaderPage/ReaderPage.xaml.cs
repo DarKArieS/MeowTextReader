@@ -63,9 +63,15 @@ namespace MeowTextReader.ReaderPage
             {
                 DispatcherQueue.TryEnqueue(async () =>
                 {
+                    LoadingRing.IsActive = true;
+                    LoadingRing.Visibility = Visibility.Visible;
+                    FileListView.IsEnabled = false;
                     await Task.Delay(1000);
                     _scrollViewer.ChangeView(null, (double)offset.Value, null, true);
                     UpdateSliderPercentText();
+                    LoadingRing.IsActive = false;
+                    LoadingRing.Visibility = Visibility.Collapsed;
+                    FileListView.IsEnabled = true;
                 });
             }
         }
