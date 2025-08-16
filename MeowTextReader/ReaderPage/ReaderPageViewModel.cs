@@ -13,6 +13,7 @@ namespace MeowTextReader.ReaderPage
         private string? _fileName;
         private double _fontSize;
         private Brush? _backgroundBrush;
+        private Brush? _foregroundBrush;
         public ObservableCollection<string> FileLines { get; } = new();
 
         public string? FileName
@@ -54,6 +55,19 @@ namespace MeowTextReader.ReaderPage
             }
         }
 
+        public Brush? ForegroundBrush
+        {
+            get => _foregroundBrush;
+            set
+            {
+                if (_foregroundBrush != value)
+                {
+                    _foregroundBrush = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
+
         public ReaderPageViewModel()
         {
             var path = MainRepo.Instance.OpenFilePath;
@@ -64,6 +78,7 @@ namespace MeowTextReader.ReaderPage
             }
             FontSize = MainRepo.Instance.FontSize;
             UpdateBackgroundBrush();
+            UpdateForegroundBrush();
             MainRepo.ReaderSettingChanged += OnReaderSettingChanged;
         }
 
@@ -71,6 +86,7 @@ namespace MeowTextReader.ReaderPage
         {
             FontSize = MainRepo.Instance.FontSize;
             UpdateBackgroundBrush();
+            UpdateForegroundBrush();
         }
 
         private void LoadFileLines(string? path)
@@ -122,6 +138,30 @@ namespace MeowTextReader.ReaderPage
             catch
             {
                 BackgroundBrush = null;
+            }
+        }
+
+        private void UpdateForegroundBrush()
+        {
+            var setting = MainRepo.Instance.ReaderSettingObj;
+            if (!setting.UseCustomForegroundColor || string.IsNullOrWhiteSpace(setting.CustomForegroundColor))
+            {
+                ForegroundBrush = null;
+                return;
+            }
+            try
+            {
+                var colorStr = setting.CustomForegroundColor;
+                var color = ColorHelper.FromArgb(
+                    Convert.ToByte(colorStr.Substring(1, 2), 16),
+                    Convert.ToByte(colorStr.Substring(3, 2), 16),
+                    Convert.ToByte(colorStr.Substring(5, 2), 16),
+                    Convert.ToByte(colorStr.Substring(7, 2), 16));
+                ForegroundBrush = new SolidColorBrush(color);
+            }
+            catch
+            {
+                ForegroundBrush = null;
             }
         }
 

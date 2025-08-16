@@ -47,5 +47,27 @@
                 Text="{Binding CustomColorText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
             <Button Click="PickColor_Click" Content="選擇顏色" />
         </StackPanel>
+        <TextBlock Margin="0,0,0,8" Text="文字顏色" />
+        <StackPanel Orientation="Horizontal">
+            <RadioButton
+                Content="系統預設"
+                GroupName="FgColor"
+                IsChecked="{Binding IsCustomTextColor, Converter={StaticResource InverseBooleanConverter}, Mode=TwoWay}" />
+            <RadioButton
+                Margin="16,0,0,0"
+                Content="自訂"
+                GroupName="FgColor"
+                IsChecked="{Binding IsCustomTextColor, Mode=TwoWay}" />
+        </StackPanel>
+        <StackPanel
+            Margin="0,8,0,0"
+            Orientation="Horizontal"
+            Visibility="{Binding IsCustomTextColor, Converter={StaticResource BooleanToVisibilityConverter}}">
+            <TextBox
+                Width="100"
+                Margin="0,0,8,0"
+                Text="{Binding CustomTextColorText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+            <Button Click="PickTextColor_Click" Content="選擇顏色" />
+        </StackPanel>
     </StackPanel>
 </UserControl>

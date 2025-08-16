@@ -8,6 +8,8 @@ namespace MeowTextReader.ReaderPage
         private double _fontSize;
         private bool _isCustomColor;
         private string? _customColorText;
+        private bool _isCustomTextColor;
+        private string? _customTextColorText;
 
         public double FontSize
         {
@@ -65,10 +67,53 @@ namespace MeowTextReader.ReaderPage
             }
         }
 
+        public bool IsCustomTextColor
+        {
+            get => _isCustomTextColor;
+            set
+            {
+                if (_isCustomTextColor != value)
+                {
+                    _isCustomTextColor = value;
+                    OnPropertyChanged();
+                    if (!value)
+                    {
+                        MeowTextReader.MainRepo.Instance.SetForegroundColor(null, false);
+                    }
+                    else if (string.IsNullOrWhiteSpace(CustomTextColorText))
+                    {
+                        // Do Nothing
+                    }
+                    else
+                    {
+                        MeowTextReader.MainRepo.Instance.SetForegroundColor(CustomTextColorText, true);
+                    }
+                }
+            }
+        }
+
+        public string? CustomTextColorText
+        {
+            get => _customTextColorText;
+            set
+            {
+                if (_customTextColorText != value)
+                {
+                    _customTextColorText = value;
+                    OnPropertyChanged();
+                    if (IsCustomTextColor && !string.IsNullOrWhiteSpace(value))
+                    {
+                        MeowTextReader.MainRepo.Instance.SetForegroundColor(value, true);
+                    }
+                }
+            }
+        }
+
         public SettingsDialogViewModel()
         {
             _fontSize = MeowTextReader.MainRepo.Instance.FontSize;
             var setting = MeowTextReader.MainRepo.Instance.ReaderSettingObj;
+            // ≠I¥∫¶‚
             if (setting.UseCustomBackgroundColor && !string.IsNullOrWhiteSpace(setting.CustomBackgroundColor))
             {
                 _isCustomColor = true;
@@ -78,6 +123,17 @@ namespace MeowTextReader.ReaderPage
             {
                 _isCustomColor = false;
                 _customColorText = null;
+            }
+            // §Â¶r√C¶‚
+            if (setting.UseCustomForegroundColor && !string.IsNullOrWhiteSpace(setting.CustomForegroundColor))
+            {
+                _isCustomTextColor = true;
+                _customTextColorText = setting.CustomForegroundColor;
+            }
+            else
+            {
+                _isCustomTextColor = false;
+                _customTextColorText = null;
             }
         }
 

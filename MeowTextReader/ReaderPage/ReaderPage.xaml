@@ -63,6 +63,7 @@
                 <DataTemplate>
                     <TextBlock
                         FontSize="{Binding DataContext.FontSize, ElementName=FileListView, FallbackValue=20}"
+                        Foreground="{Binding DataContext.ForegroundBrush, ElementName=FileListView}"
                         IsTextSelectionEnabled="True"
                         Text="{Binding}"
                         TextWrapping="WrapWholeWords" />
