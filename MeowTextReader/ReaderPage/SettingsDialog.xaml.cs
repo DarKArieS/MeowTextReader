@@ -1,6 +1,7 @@
+using System;
+using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Input;
-using System;
 
 namespace MeowTextReader.ReaderPage
 {
@@ -41,6 +42,28 @@ namespace MeowTextReader.ReaderPage
                 e.Key != Windows.System.VirtualKey.Tab)
             {
                 e.Handled = true;
+            }
+        }
+
+        private async void PickColor_Click(object sender, RoutedEventArgs e)
+        {
+            var colorPicker = new ColorPicker();
+            var dialog = new ContentDialog
+            {
+                Title = "選擇顏色",
+                Content = colorPicker,
+                PrimaryButtonText = "確定",
+                CloseButtonText = "取消",
+                XamlRoot = this.XamlRoot
+            };
+            if (await dialog.ShowAsync() == ContentDialogResult.Primary)
+            {
+                var color = colorPicker.Color;
+                string hex = $"#{color.A:X2}{color.R:X2}{color.G:X2}{color.B:X2}";
+                if (DataContext is SettingsDialogViewModel vm)
+                {
+                    vm.CustomColorText = hex;
+                }
             }
         }
     }

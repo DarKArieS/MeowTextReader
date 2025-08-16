@@ -2,17 +2,18 @@
     x:Class="MeowTextReader.ReaderPage.SettingsDialog"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:converters="using:MeowTextReader.ReaderPage"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-    xmlns:local="using:MeowTextReader.ReaderPage"
-    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    d:DesignHeight="200"
-    d:DesignWidth="300"
-    mc:Ignorable="d">
+    xmlns:local="using:MeowTextReader.ReaderPage">
+    <UserControl.Resources>
+        <converters:InverseBooleanConverter x:Key="InverseBooleanConverter" />
+        <converters:BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
+    </UserControl.Resources>
     <StackPanel
         Margin="20"
         HorizontalAlignment="Left"
         Orientation="Vertical">
-        <TextBlock Margin="0,0,0,4" Text="文字大小" />
+        <TextBlock Margin="0,0,0,8" Text="文字大小" />
         <StackPanel Orientation="Horizontal">
             <Button Click="DecreaseFontSize_Click" Content="-" />
             <TextBox
@@ -23,6 +24,28 @@
                 Text="{Binding FontSize, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                 TextAlignment="Center" />
             <Button Click="IncreaseFontSize_Click" Content="+" />
+        </StackPanel>
+        <TextBlock Margin="0,0,0,8" Text="背景色" />
+        <StackPanel Orientation="Horizontal">
+            <RadioButton
+                Content="系統預設"
+                GroupName="BgColor"
+                IsChecked="{Binding IsCustomColor, Converter={StaticResource InverseBooleanConverter}, Mode=TwoWay}" />
+            <RadioButton
+                Margin="16,0,0,0"
+                Content="自訂"
+                GroupName="BgColor"
+                IsChecked="{Binding IsCustomColor, Mode=TwoWay}" />
+        </StackPanel>
+        <StackPanel
+            Margin="0,8,0,0"
+            Orientation="Horizontal"
+            Visibility="{Binding IsCustomColor, Converter={StaticResource BooleanToVisibilityConverter}}">
+            <TextBox
+                Width="100"
+                Margin="0,0,8,0"
+                Text="{Binding CustomColorText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+            <Button Click="PickColor_Click" Content="選擇顏色" />
         </StackPanel>
     </StackPanel>
 </UserControl>

@@ -15,6 +15,8 @@ namespace MeowTextReader
     public class ReaderSetting // 移出 MainRepo class，作為獨立 public class
     {
         public double FontSize { get; set; } = 20.0;
+        public string? CustomBackgroundColor { get; set; } = null; // 改名
+        public bool UseCustomBackgroundColor { get; set; } = false; // 新增
     }
 
     public class MainRepo
@@ -125,9 +127,12 @@ namespace MeowTextReader
                 {
                     _readerSettingCache.FontSize = value;
                     SaveConfig();
+                    ReaderSettingChanged?.Invoke();
                 }
             }
         }
+
+        public static event Action? ReaderSettingChanged;
 
         public List<HistoryItem> History => _config.history;
 
@@ -156,6 +161,14 @@ namespace MeowTextReader
         public void SetOpenFilePath(string path)
         {
             OpenFilePath = path;
+        }
+
+        public void SetBackgroundColor(string? color, bool useCustom)
+        {
+            _readerSettingCache.CustomBackgroundColor = color;
+            _readerSettingCache.UseCustomBackgroundColor = useCustom;
+            SaveConfig();
+            ReaderSettingChanged?.Invoke();
         }
 
         private void SaveConfig()
