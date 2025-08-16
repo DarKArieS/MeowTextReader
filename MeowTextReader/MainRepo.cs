@@ -17,6 +17,8 @@ namespace MeowTextReader
         public double FontSize { get; set; } = 20.0;
         public string? CustomBackgroundColor { get; set; } = null; // 改名
         public bool UseCustomBackgroundColor { get; set; } = false; // 新增
+        public string? CustomForegroundColor { get; set; } = null; // 新增
+        public bool UseCustomForegroundColor { get; set; } = false; // 新增
     }
 
     public class MainRepo
@@ -167,6 +169,14 @@ namespace MeowTextReader
         {
             _readerSettingCache.CustomBackgroundColor = color;
             _readerSettingCache.UseCustomBackgroundColor = useCustom;
+            SaveConfig();
+            ReaderSettingChanged?.Invoke();
+        }
+
+        public void SetForegroundColor(string? color, bool useCustom)
+        {
+            _readerSettingCache.CustomForegroundColor = color;
+            _readerSettingCache.UseCustomForegroundColor = useCustom;
             SaveConfig();
             ReaderSettingChanged?.Invoke();
         }
