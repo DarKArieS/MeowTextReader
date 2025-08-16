@@ -7,6 +7,7 @@ namespace MeowTextReader.ReaderPage
         public SettingsDialog()
         {
             this.InitializeComponent();
+            this.DataContext = new SettingsDialogViewModel();
         }
     }
 }

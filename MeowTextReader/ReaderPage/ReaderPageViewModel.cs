@@ -8,6 +8,7 @@ namespace MeowTextReader.ReaderPage
     public class ReaderPageViewModel : INotifyPropertyChanged
     {
         private string? _fileName;
+        private double _fontSize;
         public ObservableCollection<string> FileLines { get; } = new();
 
         public string? FileName
@@ -23,6 +24,19 @@ namespace MeowTextReader.ReaderPage
             }
         }
 
+        public double FontSize
+        {
+            get => _fontSize;
+            set
+            {
+                if (_fontSize != value)
+                {
+                    _fontSize = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
+
         public ReaderPageViewModel()
         {
             var path = MainRepo.Instance.OpenFilePath;
@@ -31,6 +45,8 @@ namespace MeowTextReader.ReaderPage
                 FileName = Path.GetFileNameWithoutExtension(path);
                 LoadFileLines(path);
             }
+            FontSize = MainRepo.Instance.FontSize;
+            MainRepoFontSizeWatcher();
         }
 
         private void LoadFileLines(string? path)
@@ -59,6 +75,22 @@ namespace MeowTextReader.ReaderPage
                 return MainRepo.Instance.GetHistoryScrollOffset(FileName);
             }
             return null;
+        }
+
+        // 監聽 MainRepo.FontSize 變化（簡單 polling 方式）
+        private async void MainRepoFontSizeWatcher()
+        {
+            double last = FontSize;
+            while (true)
+            {
+                await System.Threading.Tasks.Task.Delay(500);
+                var current = MainRepo.Instance.FontSize;
+                if (current != last)
+                {
+                    FontSize = current;
+                    last = current;
+                }
+            }
         }
 
         public event PropertyChangedEventHandler? PropertyChanged;

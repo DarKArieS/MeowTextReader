@@ -8,7 +8,8 @@
     mc:Ignorable="d"
     d:DesignHeight="200"
     d:DesignWidth="300">
-    <Grid>
-        <TextBlock Text="設定" VerticalAlignment="Center" HorizontalAlignment="Center"/>
-    </Grid>
+    <StackPanel Margin="20" Orientation="Vertical" HorizontalAlignment="Left">
+        <TextBlock Text="文字大小" Margin="0,0,0,8"/>
+        <TextBox Text="{Binding FontSize, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Width="100"/>
+    </StackPanel>
 </UserControl>
