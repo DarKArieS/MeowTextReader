@@ -20,6 +20,11 @@
                     Margin="0,0,0,10"
                     Click="BackButton_Click"
                     Content="返回" />
+                <Button
+                    Width="80"
+                    Margin="8,0,0,10"
+                    Click="SettingsButton_Click"
+                    Content="設定" />
                 <TextBlock
                     Margin="8,0,0,0"
                     VerticalAlignment="Center"
