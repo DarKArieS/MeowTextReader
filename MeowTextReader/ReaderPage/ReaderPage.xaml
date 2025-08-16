@@ -55,5 +55,13 @@
                 </DataTemplate>
             </ListView.ItemTemplate>
         </ListView>
+
+        <ProgressRing x:Name="LoadingRing"
+                      IsActive="False"
+                      Visibility="Collapsed"
+                      Width="48" Height="48"
+                      HorizontalAlignment="Center"
+                      VerticalAlignment="Center"
+                      Grid.RowSpan="3"/>
     </Grid>
 </Page>
