@@ -7,7 +7,7 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d">
 
-    <Grid Margin="20" Background="{Binding BackgroundBrush}">
+    <Grid Margin="20">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
@@ -58,6 +58,7 @@
             x:Name="FileListView"
             Grid.Row="2"
             ItemsSource="{Binding FileLines}"
+            Background="{Binding BackgroundBrush}"
             SelectionMode="None">
             <ListView.ItemTemplate>
                 <DataTemplate>

@@ -122,7 +122,13 @@ namespace MeowTextReader.ReaderPage
             else
             {
                 _isCustomColor = false;
-                _customColorText = null;
+                if (!string.IsNullOrWhiteSpace(setting.CustomBackgroundColor))
+                {
+                    _customColorText = setting.CustomBackgroundColor;
+                }
+                else {
+                    _customColorText = null;
+                }
             }
             // §Â¶r√C¶‚
             if (setting.UseCustomForegroundColor && !string.IsNullOrWhiteSpace(setting.CustomForegroundColor))
@@ -133,7 +139,14 @@ namespace MeowTextReader.ReaderPage
             else
             {
                 _isCustomTextColor = false;
-                _customTextColorText = null;
+                if (!string.IsNullOrWhiteSpace(setting.CustomForegroundColor))
+                {
+                    _customTextColorText = setting.CustomForegroundColor;
+                }
+                else
+                {
+                    _customTextColorText = null;
+                }
             }
         }
 

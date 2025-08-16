@@ -128,11 +128,12 @@ namespace MeowTextReader.ReaderPage
             try
             {
                 var colorStr = setting.CustomBackgroundColor;
+                // #RRGGBB
                 var color = ColorHelper.FromArgb(
+                    255,
                     Convert.ToByte(colorStr.Substring(1, 2), 16),
                     Convert.ToByte(colorStr.Substring(3, 2), 16),
-                    Convert.ToByte(colorStr.Substring(5, 2), 16),
-                    Convert.ToByte(colorStr.Substring(7, 2), 16));
+                    Convert.ToByte(colorStr.Substring(5, 2), 16));
                 BackgroundBrush = new SolidColorBrush(color);
             }
             catch
@@ -152,11 +153,12 @@ namespace MeowTextReader.ReaderPage
             try
             {
                 var colorStr = setting.CustomForegroundColor;
+                // #RRGGBB
                 var color = ColorHelper.FromArgb(
+                    255,
                     Convert.ToByte(colorStr.Substring(1, 2), 16),
                     Convert.ToByte(colorStr.Substring(3, 2), 16),
-                    Convert.ToByte(colorStr.Substring(5, 2), 16),
-                    Convert.ToByte(colorStr.Substring(7, 2), 16));
+                    Convert.ToByte(colorStr.Substring(5, 2), 16));
                 ForegroundBrush = new SolidColorBrush(color);
             }
             catch
