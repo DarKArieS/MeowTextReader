@@ -167,7 +167,9 @@ namespace MeowTextReader
 
         public void SetBackgroundColor(string? color, bool useCustom)
         {
-            _readerSettingCache.CustomBackgroundColor = color;
+            if (useCustom) {
+                _readerSettingCache.CustomBackgroundColor = color;
+            }
             _readerSettingCache.UseCustomBackgroundColor = useCustom;
             SaveConfig();
             ReaderSettingChanged?.Invoke();
@@ -175,7 +177,9 @@ namespace MeowTextReader
 
         public void SetForegroundColor(string? color, bool useCustom)
         {
-            _readerSettingCache.CustomForegroundColor = color;
+            if (useCustom) {
+                _readerSettingCache.CustomForegroundColor = color;
+            }
             _readerSettingCache.UseCustomForegroundColor = useCustom;
             SaveConfig();
             ReaderSettingChanged?.Invoke();
