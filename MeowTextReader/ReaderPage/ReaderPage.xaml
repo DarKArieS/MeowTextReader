@@ -14,28 +14,37 @@
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
         <StackPanel Grid.Row="0" Orientation="Vertical">
-            <StackPanel Orientation="Horizontal">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition />
+                </Grid.ColumnDefinitions>
+                <StackPanel Grid.Column="0" Orientation="Horizontal">
+                    <Button
+                        Width="80"
+                        Margin="0,0,0,10"
+                        Click="BackButton_Click"
+                        Content="返回" />
+                    <TextBlock
+                        Margin="8,0,0,0"
+                        VerticalAlignment="Center"
+                        Text="{Binding FileName}"
+                        TextAlignment="Start"
+                        TextWrapping="Wrap" />
+                    <TextBlock
+                        x:Name="SliderPercentText"
+                        Margin="8,0,0,0"
+                        VerticalAlignment="Center" />
+                </StackPanel>
                 <Button
-                    Width="80"
-                    Margin="0,0,0,10"
-                    Click="BackButton_Click"
-                    Content="返回" />
-                <Button
+                    x:Name="SettingsButton"
+                    Grid.Column="1"
                     Width="80"
                     Margin="8,0,0,10"
+                    HorizontalAlignment="Right"
                     Click="SettingsButton_Click"
                     Content="設定" />
-                <TextBlock
-                    Margin="8,0,0,0"
-                    VerticalAlignment="Center"
-                    Text="{Binding FileName}"
-                    TextAlignment="Start"
-                    TextWrapping="Wrap" />
-                <TextBlock
-                    x:Name="SliderPercentText"
-                    Margin="8,0,0,0"
-                    VerticalAlignment="Center" />
-            </StackPanel>
+            </Grid>
             <Slider
                 x:Name="ScrollSlider"
                 VerticalAlignment="Center"
@@ -61,12 +70,22 @@
             </ListView.ItemTemplate>
         </ListView>
 
-        <ProgressRing x:Name="LoadingRing"
-                      IsActive="False"
-                      Visibility="Collapsed"
-                      Width="48" Height="48"
-                      HorizontalAlignment="Center"
-                      VerticalAlignment="Center"
-                      Grid.RowSpan="3"/>
+        <ProgressRing
+            x:Name="LoadingRing"
+            Grid.RowSpan="3"
+            Width="48"
+            Height="48"
+            HorizontalAlignment="Center"
+            VerticalAlignment="Center"
+            IsActive="False"
+            Visibility="Collapsed" />
+
+        <TeachingTip
+            x:Name="SettingsTeachingTip"
+            Title="設定"
+            IsLightDismissEnabled="True"
+            PreferredPlacement="TopRight">
+            <local:SettingsDialog />
+        </TeachingTip>
     </Grid>
 </Page>

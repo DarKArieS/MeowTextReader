@@ -135,14 +135,9 @@ namespace MeowTextReader.ReaderPage
             return null;
         }
 
-        private async void SettingsButton_Click(object sender, RoutedEventArgs e)
+        private void SettingsButton_Click(object sender, RoutedEventArgs e)
         {
-            var dialog = new ContentDialog
-            {
-                Content = new SettingsDialog(),
-                XamlRoot = this.XamlRoot
-            };
-            await dialog.ShowAsync();
+            SettingsTeachingTip.IsOpen = true;
         }
     }
 }
