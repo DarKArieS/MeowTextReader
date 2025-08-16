@@ -37,7 +37,7 @@ namespace MeowTextReader.ReaderPage
                 double percent = (ScrollSlider.Value / ScrollSlider.Maximum) * 100.0;
                 if (percent < 0) percent = 0;
                 if (percent > 100) percent = 100;
-                SliderPercentText.Text = $"({percent:0}%)";
+                SliderPercentText.Text = $"({percent:0.00}%)";
             }
             else
             {
