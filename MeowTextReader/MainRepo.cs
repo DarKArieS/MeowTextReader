@@ -26,7 +26,6 @@ namespace MeowTextReader
         private static readonly Lazy<MainRepo> _instance = new(() => new MainRepo());
         public static MainRepo Instance => _instance.Value;
 
-        private string? _folderPath;
         private readonly string _saveFilePath;
         private AppConfig _config = new();
         private AppPage? _lastPageCache = null;
