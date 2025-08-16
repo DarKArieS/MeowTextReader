@@ -23,6 +23,7 @@ namespace MeowTextReader.ReaderPage
             this.Loaded += ReaderPage_Loaded;
             this.Unloaded += ReaderPage_Unloaded;
             FileListView.Loaded += FileListView_Loaded;
+            MeowTextReader.MainRepo.Instance.LastPage = AppPage.ReaderPage;
         }
 
         private void ReaderPage_Loaded(object sender, RoutedEventArgs e)
