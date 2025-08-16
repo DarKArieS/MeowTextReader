@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Media;
+using MeowTextReader.ReaderPage;
 
 namespace MeowTextReader.ReaderPage
 {
@@ -132,6 +133,16 @@ namespace MeowTextReader.ReaderPage
                     return result;
             }
             return null;
+        }
+
+        private async void SettingsButton_Click(object sender, RoutedEventArgs e)
+        {
+            var dialog = new ContentDialog
+            {
+                Content = new SettingsDialog(),
+                XamlRoot = this.XamlRoot
+            };
+            await dialog.ShowAsync();
         }
     }
 }
