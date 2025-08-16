@@ -1,7 +1,10 @@
+using System;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.IO;
 using System.Runtime.CompilerServices;
+using Microsoft.UI.Xaml.Media;
+using Microsoft.UI;
 
 namespace MeowTextReader.ReaderPage
 {
@@ -9,6 +12,7 @@ namespace MeowTextReader.ReaderPage
     {
         private string? _fileName;
         private double _fontSize;
+        private Brush? _backgroundBrush;
         public ObservableCollection<string> FileLines { get; } = new();
 
         public string? FileName
@@ -37,6 +41,19 @@ namespace MeowTextReader.ReaderPage
             }
         }
 
+        public Brush? BackgroundBrush
+        {
+            get => _backgroundBrush;
+            set
+            {
+                if (_backgroundBrush != value)
+                {
+                    _backgroundBrush = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
+
         public ReaderPageViewModel()
         {
             var path = MainRepo.Instance.OpenFilePath;
@@ -46,7 +63,14 @@ namespace MeowTextReader.ReaderPage
                 LoadFileLines(path);
             }
             FontSize = MainRepo.Instance.FontSize;
-            MainRepoFontSizeWatcher();
+            UpdateBackgroundBrush();
+            MainRepo.ReaderSettingChanged += OnReaderSettingChanged;
+        }
+
+        private void OnReaderSettingChanged()
+        {
+            FontSize = MainRepo.Instance.FontSize;
+            UpdateBackgroundBrush();
         }
 
         private void LoadFileLines(string? path)
@@ -77,19 +101,27 @@ namespace MeowTextReader.ReaderPage
             return null;
         }
 
-        // 監聽 MainRepo.FontSize 變化（簡單 polling 方式）
-        private async void MainRepoFontSizeWatcher()
+        private void UpdateBackgroundBrush()
         {
-            double last = FontSize;
-            while (true)
+            var setting = MainRepo.Instance.ReaderSettingObj;
+            if (!setting.UseCustomBackgroundColor || string.IsNullOrWhiteSpace(setting.CustomBackgroundColor))
             {
-                await System.Threading.Tasks.Task.Delay(500);
-                var current = MainRepo.Instance.FontSize;
-                if (current != last)
-                {
-                    FontSize = current;
-                    last = current;
-                }
+                BackgroundBrush = null;
+                return;
+            }
+            try
+            {
+                var colorStr = setting.CustomBackgroundColor;
+                var color = ColorHelper.FromArgb(
+                    Convert.ToByte(colorStr.Substring(1, 2), 16),
+                    Convert.ToByte(colorStr.Substring(3, 2), 16),
+                    Convert.ToByte(colorStr.Substring(5, 2), 16),
+                    Convert.ToByte(colorStr.Substring(7, 2), 16));
+                BackgroundBrush = new SolidColorBrush(color);
+            }
+            catch
+            {
+                BackgroundBrush = null;
             }
         }
 
