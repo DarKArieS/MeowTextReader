@@ -1,7 +1,7 @@
 using Microsoft.UI.Text;
 using Microsoft.UI.Xaml.Data;
 
-namespace MeowTextReader
+namespace MeowTextReader.MainPage
 {
     public class FolderBoldConverter : IValueConverter
     {

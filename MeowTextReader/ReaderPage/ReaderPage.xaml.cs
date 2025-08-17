@@ -120,7 +120,7 @@ namespace MeowTextReader.ReaderPage
 
         private void BackButton_Click(object sender, RoutedEventArgs e)
         {
-            Frame.Navigate(typeof(MeowTextReader.MainPage));
+            Frame.Navigate(typeof(MeowTextReader.MainPage.MainPage));
         }
 
         private ScrollViewer? FindScrollViewer(DependencyObject parent)
