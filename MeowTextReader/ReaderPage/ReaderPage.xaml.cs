@@ -165,6 +165,26 @@ namespace MeowTextReader.ReaderPage
                 anim.To = 0;
                 slideIn.Begin();
             }
+
+            e.Handled = true;
+        }
+
+        private const double scrollDelta = 300;
+        private void ScrollDown()
+        {
+            if (_scrollViewer == null) return;
+            double offset = _scrollViewer.VerticalOffset;
+            double max = _scrollViewer.ScrollableHeight;
+            double newOffset = Math.Min(offset + scrollDelta, max);
+            _scrollViewer.ChangeView(null, newOffset, null, false);
+        }
+
+        private void ScrollUp()
+        {
+            if (_scrollViewer == null) return;
+            double offset = _scrollViewer.VerticalOffset;
+            double newOffset = Math.Max(offset - scrollDelta, 0);
+            _scrollViewer.ChangeView(null, newOffset, null, false);
         }
 
         private void SlideOut_Completed(object? sender, object e)
@@ -178,20 +198,14 @@ namespace MeowTextReader.ReaderPage
 
         private void FileListView_KeyDown(object sender, KeyRoutedEventArgs e)
         {
-            if (_scrollViewer == null) return;
-            double offset = _scrollViewer.VerticalOffset;
-            double max = _scrollViewer.ScrollableHeight;
-            const double delta = 300;
             if (e.Key == VirtualKey.D)
             {
-                double newOffset = Math.Min(offset + delta, max);
-                _scrollViewer.ChangeView(null, newOffset, null, false);
+                ScrollDown();
                 e.Handled = true;
             }
             else if (e.Key == VirtualKey.U)
             {
-                double newOffset = Math.Max(offset - delta, 0);
-                _scrollViewer.ChangeView(null, newOffset, null, false);
+                ScrollUp();
                 e.Handled = true;
             }
         }
