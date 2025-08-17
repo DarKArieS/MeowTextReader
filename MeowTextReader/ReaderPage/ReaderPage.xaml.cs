@@ -209,5 +209,17 @@ namespace MeowTextReader.ReaderPage
                 e.Handled = true;
             }
         }
+
+        private void LeftOverlay_Tapped(object sender, TappedRoutedEventArgs e)
+        {
+            ScrollUp();
+            e.Handled = true;
+        }
+
+        private void RightOverlay_Tapped(object sender, TappedRoutedEventArgs e)
+        {
+            ScrollDown();
+            e.Handled = true;
+        }
     }
 }

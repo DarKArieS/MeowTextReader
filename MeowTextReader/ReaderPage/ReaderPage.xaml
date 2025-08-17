@@ -26,23 +26,33 @@
 
     <Grid>
         <ListView
-            x:Name="FileListView"
-            Background="{Binding BackgroundBrush}"
-            ItemsSource="{Binding FileLines}"
-            SelectionMode="None"
-            Tapped="FileListView_Tapped"
-            KeyDown="FileListView_KeyDown">
+                x:Name="FileListView"
+                Background="{Binding BackgroundBrush}"
+                ItemsSource="{Binding FileLines}"
+                SelectionMode="None"
+                Tapped="FileListView_Tapped"
+                KeyDown="FileListView_KeyDown">
             <ListView.ItemTemplate>
                 <DataTemplate>
                     <TextBlock
-                        FontSize="{Binding DataContext.FontSize, ElementName=FileListView, FallbackValue=20}"
-                        Foreground="{Binding DataContext.ForegroundBrush, ElementName=FileListView}"
-                        IsTextSelectionEnabled="False"
-                        Text="{Binding}"
-                        TextWrapping="WrapWholeWords" />
+                            FontSize="{Binding DataContext.FontSize, ElementName=FileListView, FallbackValue=20}"
+                            Foreground="{Binding DataContext.ForegroundBrush, ElementName=FileListView}"
+                            IsTextSelectionEnabled="False"
+                            Text="{Binding}"
+                            TextWrapping="WrapWholeWords" />
                 </DataTemplate>
             </ListView.ItemTemplate>
         </ListView>
+
+        <Grid VerticalAlignment="Stretch" HorizontalAlignment="Stretch">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="3*" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+            <Border Grid.Column="0" Background="Transparent" Tapped="LeftOverlay_Tapped" />
+            <Border Grid.Column="2" Background="Transparent" Tapped="RightOverlay_Tapped" />
+        </Grid>
 
         <StackPanel
             x:Name="TopPanel"
