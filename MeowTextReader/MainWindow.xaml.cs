@@ -1,5 +1,4 @@
 using Microsoft.UI.Xaml;
-using Microsoft.UI.Xaml.Controls;
 
 namespace MeowTextReader
 {
@@ -16,7 +15,7 @@ namespace MeowTextReader
             }
             else
             {
-                MainFrame.Navigate(typeof(MainPage));
+                MainFrame.Navigate(typeof(MainPage.MainPage));
             }
         }
     }

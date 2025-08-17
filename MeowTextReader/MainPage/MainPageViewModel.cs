@@ -6,7 +6,7 @@ using System.IO;
 using System.Linq;
 using System.Windows.Input;
 
-namespace MeowTextReader
+namespace MeowTextReader.MainPage
 {
     public class FileItem
     {
