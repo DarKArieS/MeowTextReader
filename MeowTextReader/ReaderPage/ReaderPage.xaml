@@ -26,17 +26,17 @@
 
     <Grid>
         <ListView
-                x:Name="FileListView"
+                x:Name="ReaderTextListView"
                 Background="{Binding BackgroundBrush}"
                 ItemsSource="{Binding FileLines}"
                 SelectionMode="None"
-                Tapped="FileListView_Tapped"
-                KeyDown="FileListView_KeyDown">
+                Tapped="ReaderTextListView_Tapped"
+                KeyDown="ReaderTextListView_KeyDown">
             <ListView.ItemTemplate>
                 <DataTemplate>
                     <TextBlock
-                            FontSize="{Binding DataContext.FontSize, ElementName=FileListView, FallbackValue=20}"
-                            Foreground="{Binding DataContext.ForegroundBrush, ElementName=FileListView}"
+                            FontSize="{Binding DataContext.FontSize, ElementName=ReaderTextListView, FallbackValue=20}"
+                            Foreground="{Binding DataContext.ForegroundBrush, ElementName=ReaderTextListView}"
                             IsTextSelectionEnabled="False"
                             Text="{Binding}"
                             TextWrapping="WrapWholeWords" />
