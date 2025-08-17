@@ -25,13 +25,13 @@ namespace MeowTextReader.ReaderPage
             this.DataContext = ViewModel;
             this.Loaded += ReaderPage_Loaded;
             this.Unloaded += ReaderPage_Unloaded;
-            FileListView.Loaded += FileListView_Loaded;
+            ReaderTextListView.Loaded += ReaderTextListView_Loaded;
             MeowTextReader.MainRepo.Instance.LastPage = AppPage.ReaderPage;
         }
 
         private void ReaderPage_Loaded(object sender, RoutedEventArgs e)
         {
-            _scrollViewer = FindScrollViewer(FileListView);
+            _scrollViewer = FindScrollViewer(ReaderTextListView);
         }
 
         private void UpdateTitlePercentText()
@@ -49,9 +49,9 @@ namespace MeowTextReader.ReaderPage
             }
         }
 
-        private void FileListView_Loaded(object sender, RoutedEventArgs e)
+        private void ReaderTextListView_Loaded(object sender, RoutedEventArgs e)
         {
-            _scrollViewer = FindScrollViewer(FileListView);
+            _scrollViewer = FindScrollViewer(ReaderTextListView);
 
             if (_scrollViewer != null)
             {
@@ -69,13 +69,13 @@ namespace MeowTextReader.ReaderPage
                 {
                     LoadingRing.IsActive = true;
                     LoadingRing.Visibility = Visibility.Visible;
-                    FileListView.IsEnabled = false;
+                    ReaderTextListView.IsEnabled = false;
                     await Task.Delay(1000);
                     _scrollViewer.ChangeView(null, (double)offset.Value, null, true);
                     UpdateTitlePercentText();
                     LoadingRing.IsActive = false;
                     LoadingRing.Visibility = Visibility.Collapsed;
-                    FileListView.IsEnabled = true;
+                    ReaderTextListView.IsEnabled = true;
                 });
             }
         }
@@ -85,7 +85,7 @@ namespace MeowTextReader.ReaderPage
             if (_scrollViewer != null)
                 _scrollViewer.ViewChanged -= ScrollViewer_ViewChanged;
             _debounceTimer?.Dispose();
-            FileListView.Loaded -= FileListView_Loaded;
+            ReaderTextListView.Loaded -= ReaderTextListView_Loaded;
         }
 
         private void ScrollViewer_ViewChanged(object? sender, ScrollViewerViewChangedEventArgs e)
@@ -142,7 +142,7 @@ namespace MeowTextReader.ReaderPage
             SettingsTeachingTip.IsOpen = true;
         }
 
-        private void FileListView_Tapped(object sender, Microsoft.UI.Xaml.Input.TappedRoutedEventArgs e)
+        private void ReaderTextListView_Tapped(object sender, Microsoft.UI.Xaml.Input.TappedRoutedEventArgs e)
         {
             if (TopPanel.Visibility == Visibility.Visible)
             {
@@ -196,7 +196,7 @@ namespace MeowTextReader.ReaderPage
             slideOut.Completed -= SlideOut_Completed;
         }
 
-        private void FileListView_KeyDown(object sender, KeyRoutedEventArgs e)
+        private void ReaderTextListView_KeyDown(object sender, KeyRoutedEventArgs e)
         {
             if (e.Key == VirtualKey.D)
             {
