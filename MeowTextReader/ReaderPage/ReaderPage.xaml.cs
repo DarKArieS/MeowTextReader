@@ -5,6 +5,8 @@ using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Media;
 using Microsoft.UI.Xaml.Media.Animation;
+using Microsoft.UI.Xaml.Input;
+using Windows.System;
 
 namespace MeowTextReader.ReaderPage
 {
@@ -172,6 +174,26 @@ namespace MeowTextReader.ReaderPage
             if (tt != null) tt.Y = 0; // reset for next show
             var slideOut = (Storyboard)this.Resources["SlideOutTopPanel"];
             slideOut.Completed -= SlideOut_Completed;
+        }
+
+        private void FileListView_KeyDown(object sender, KeyRoutedEventArgs e)
+        {
+            if (_scrollViewer == null) return;
+            double offset = _scrollViewer.VerticalOffset;
+            double max = _scrollViewer.ScrollableHeight;
+            const double delta = 300;
+            if (e.Key == VirtualKey.D)
+            {
+                double newOffset = Math.Min(offset + delta, max);
+                _scrollViewer.ChangeView(null, newOffset, null, false);
+                e.Handled = true;
+            }
+            else if (e.Key == VirtualKey.U)
+            {
+                double newOffset = Math.Max(offset - delta, 0);
+                _scrollViewer.ChangeView(null, newOffset, null, false);
+                e.Handled = true;
+            }
         }
     }
 }

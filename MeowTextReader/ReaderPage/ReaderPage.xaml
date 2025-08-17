@@ -30,7 +30,8 @@
             Background="{Binding BackgroundBrush}"
             ItemsSource="{Binding FileLines}"
             SelectionMode="None"
-            Tapped="FileListView_Tapped">
+            Tapped="FileListView_Tapped"
+            KeyDown="FileListView_KeyDown">
             <ListView.ItemTemplate>
                 <DataTemplate>
                     <TextBlock
