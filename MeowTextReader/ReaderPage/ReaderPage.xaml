@@ -30,7 +30,6 @@
             Background="{Binding BackgroundBrush}"
             ItemsSource="{Binding FileLines}"
             SelectionMode="None"
-            KeyDown="ReaderTextListView_KeyDown"
             Tapped="ReaderTextListView_Tapped">
             <ListView.ItemTemplate>
                 <DataTemplate>
@@ -46,16 +45,20 @@
 
         <Grid HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*" />
-                <ColumnDefinition Width="3*" />
-                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="5*" />
+                <ColumnDefinition Width="88*" />
+                <ColumnDefinition Width="7*" />
             </Grid.ColumnDefinitions>
-            <Border
+            <Grid
                 Grid.Column="0"
+                VerticalAlignment="Bottom"
+                Height="200"
                 Background="Transparent"
                 Tapped="LeftOverlay_Tapped" />
             <Border
                 Grid.Column="2"
+                VerticalAlignment="Bottom"
+                Height="200"
                 Background="Transparent"
                 Tapped="RightOverlay_Tapped" />
         </Grid>
