@@ -2,8 +2,8 @@
     x:Class="MeowTextReader.ReaderPage.SettingsDialog"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:converters="using:MeowTextReader.ReaderPage"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:local="using:MeowTextReader.ReaderPage">
     <UserControl.Resources>
         <converters:InverseBooleanConverter x:Key="InverseBooleanConverter" />
@@ -25,7 +25,8 @@
                 TextAlignment="Center" />
             <Button Click="IncreaseFontSize_Click" Content="+" />
         </StackPanel>
-        <TextBlock Margin="0,0,0,8" Text="背景色" />
+
+        <TextBlock Margin="0,16,0,0" Text="背景文字顏色" />
         <StackPanel Orientation="Horizontal">
             <RadioButton
                 Content="系統預設"
@@ -37,6 +38,11 @@
                 GroupName="BgColor"
                 IsChecked="{Binding IsCustomColor, Mode=TwoWay}" />
         </StackPanel>
+
+        <TextBlock
+            Margin="8,0,0,0"
+            Text="背景色"
+            Visibility="{Binding IsCustomColor, Converter={StaticResource BooleanToVisibilityConverter}}" />
         <StackPanel
             Margin="0,8,0,0"
             Orientation="Horizontal"
@@ -44,25 +50,18 @@
             <TextBox
                 Width="100"
                 Margin="0,0,8,0"
-                Text="{Binding CustomColorText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                Text="{Binding CustomBackgroundColorText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
             <Button Click="PickColor_Click" Content="選擇顏色" />
         </StackPanel>
-        <TextBlock Margin="0,0,0,8" Text="文字顏色" />
-        <StackPanel Orientation="Horizontal">
-            <RadioButton
-                Content="系統預設"
-                GroupName="FgColor"
-                IsChecked="{Binding IsCustomTextColor, Converter={StaticResource InverseBooleanConverter}, Mode=TwoWay}" />
-            <RadioButton
-                Margin="16,0,0,0"
-                Content="自訂"
-                GroupName="FgColor"
-                IsChecked="{Binding IsCustomTextColor, Mode=TwoWay}" />
-        </StackPanel>
+
+        <TextBlock
+            Margin="8,0,0,0"
+            Text="文字顏色"
+            Visibility="{Binding IsCustomColor, Converter={StaticResource BooleanToVisibilityConverter}}" />
         <StackPanel
             Margin="0,8,0,0"
             Orientation="Horizontal"
-            Visibility="{Binding IsCustomTextColor, Converter={StaticResource BooleanToVisibilityConverter}}">
+            Visibility="{Binding IsCustomColor, Converter={StaticResource BooleanToVisibilityConverter}}">
             <TextBox
                 Width="100"
                 Margin="0,0,8,0"

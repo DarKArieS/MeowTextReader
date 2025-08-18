@@ -7,9 +7,9 @@ namespace MeowTextReader.ReaderPage
     {
         private double _fontSize;
         private bool _isCustomColor;
-        private string? _customColorText;
-        private bool _isCustomTextColor;
+        private string? _customBackgroundColorText;
         private string? _customTextColorText;
+        private MainRepo repo = MainRepo.Instance;
 
         public double FontSize
         {
@@ -20,7 +20,7 @@ namespace MeowTextReader.ReaderPage
                 {
                     _fontSize = value;
                     OnPropertyChanged();
-                    MeowTextReader.MainRepo.Instance.FontSize = value;
+                    repo.FontSize = value;
                 }
             }
         }
@@ -36,57 +36,34 @@ namespace MeowTextReader.ReaderPage
                     OnPropertyChanged();
                     if (!value)
                     {
-                        MeowTextReader.MainRepo.Instance.SetBackgroundColor(null, false);
+                        repo.SetBackgroundColor(null, false);
+                        repo.SetForegroundColor(null, false);
                     }
-                    else if (string.IsNullOrWhiteSpace(CustomColorText))
+                    else if (string.IsNullOrWhiteSpace(CustomBackgroundColorText))
                     {
                         // Do Nothing
                     }
                     else
                     {
-                        MeowTextReader.MainRepo.Instance.SetBackgroundColor(CustomColorText, true);
+                        repo.SetBackgroundColor(CustomBackgroundColorText, true);
+                        repo.SetForegroundColor(CustomTextColorText, true);
                     }
                 }
             }
         }
 
-        public string? CustomColorText
+        public string? CustomBackgroundColorText
         {
-            get => _customColorText;
+            get => _customBackgroundColorText;
             set
             {
-                if (_customColorText != value)
+                if (_customBackgroundColorText != value)
                 {
-                    _customColorText = value;
+                    _customBackgroundColorText = value;
                     OnPropertyChanged();
                     if (IsCustomColor && !string.IsNullOrWhiteSpace(value))
                     {
-                        MeowTextReader.MainRepo.Instance.SetBackgroundColor(value, true);
-                    }
-                }
-            }
-        }
-
-        public bool IsCustomTextColor
-        {
-            get => _isCustomTextColor;
-            set
-            {
-                if (_isCustomTextColor != value)
-                {
-                    _isCustomTextColor = value;
-                    OnPropertyChanged();
-                    if (!value)
-                    {
-                        MeowTextReader.MainRepo.Instance.SetForegroundColor(null, false);
-                    }
-                    else if (string.IsNullOrWhiteSpace(CustomTextColorText))
-                    {
-                        // Do Nothing
-                    }
-                    else
-                    {
-                        MeowTextReader.MainRepo.Instance.SetForegroundColor(CustomTextColorText, true);
+                        repo.SetBackgroundColor(value, true);
                     }
                 }
             }
@@ -101,9 +78,9 @@ namespace MeowTextReader.ReaderPage
                 {
                     _customTextColorText = value;
                     OnPropertyChanged();
-                    if (IsCustomTextColor && !string.IsNullOrWhiteSpace(value))
+                    if (IsCustomColor && !string.IsNullOrWhiteSpace(value))
                     {
-                        MeowTextReader.MainRepo.Instance.SetForegroundColor(value, true);
+                        repo.SetForegroundColor(value, true);
                     }
                 }
             }
@@ -111,34 +88,32 @@ namespace MeowTextReader.ReaderPage
 
         public SettingsDialogViewModel()
         {
-            _fontSize = MeowTextReader.MainRepo.Instance.FontSize;
-            var setting = MeowTextReader.MainRepo.Instance.ReaderSettingObj;
+            _fontSize = repo.FontSize;
+            var setting = repo.ReaderSettingObj;
             // ≠I¥∫¶‚
             if (setting.UseCustomBackgroundColor && !string.IsNullOrWhiteSpace(setting.CustomBackgroundColor))
             {
                 _isCustomColor = true;
-                _customColorText = setting.CustomBackgroundColor;
+                _customBackgroundColorText = setting.CustomBackgroundColor;
             }
             else
             {
                 _isCustomColor = false;
                 if (!string.IsNullOrWhiteSpace(setting.CustomBackgroundColor))
                 {
-                    _customColorText = setting.CustomBackgroundColor;
+                    _customBackgroundColorText = setting.CustomBackgroundColor;
                 }
                 else {
-                    _customColorText = null;
+                    _customBackgroundColorText = null;
                 }
             }
             // §Â¶r√C¶‚
             if (setting.UseCustomForegroundColor && !string.IsNullOrWhiteSpace(setting.CustomForegroundColor))
             {
-                _isCustomTextColor = true;
                 _customTextColorText = setting.CustomForegroundColor;
             }
             else
             {
-                _isCustomTextColor = false;
                 if (!string.IsNullOrWhiteSpace(setting.CustomForegroundColor))
                 {
                     _customTextColorText = setting.CustomForegroundColor;
