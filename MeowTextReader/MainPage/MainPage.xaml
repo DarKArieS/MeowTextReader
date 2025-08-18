@@ -12,7 +12,7 @@
         <local:InverseBooleanToVisibilityConverter x:Key="InverseBooleanToVisibilityConverter" />
     </Page.Resources>
 
-    <Grid x:Name="RootGrid" Margin="20">
+    <Grid x:Name="RootGrid" Margin="8">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
@@ -30,7 +30,7 @@
                     Click="SelectFolder_Click"
                     Content="選擇資料夾" />
             </StackPanel>
-            <TextBlock FontSize="14" Text="{Binding FolderPath, Mode=OneWay}" />
+            <TextBlock Margin="4,0,0,0" FontSize="16" Text="{Binding FolderPath, Mode=OneWay}" />
         </StackPanel>
         <ScrollViewer
             Grid.Row="1"
