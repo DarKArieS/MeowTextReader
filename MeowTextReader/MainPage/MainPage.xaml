@@ -3,15 +3,15 @@
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:local="using:MeowTextReader.MainPage"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d">
 
     <Page.Resources>
         <local:FolderBoldConverter x:Key="FolderBoldConverter" />
         <local:InverseBooleanToVisibilityConverter x:Key="InverseBooleanToVisibilityConverter" />
     </Page.Resources>
-    
+
     <Grid x:Name="RootGrid" Margin="20">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
@@ -45,22 +45,25 @@
                 <ListView.ItemTemplate>
                     <DataTemplate>
                         <Border
-                            Margin="0,0,0,4"
-                            Padding="4,2"
+                            Margin="0,0,0,8"
+                            Padding="4,8"
                             BorderBrush="Gray"
                             BorderThickness="0,0,0,1">
-                            <TextBlock FontWeight="{Binding IsFolder, Converter={StaticResource FolderBoldConverter}}" Text="{Binding Name}" />
+                            <TextBlock
+                                FontSize="20"
+                                FontWeight="{Binding IsFolder, Converter={StaticResource FolderBoldConverter}}"
+                                Text="{Binding Name}" />
                             <Border.ContextFlyout>
                                 <MenuFlyout>
                                     <MenuFlyoutItem
-                                        Text="編輯"
-                                        Visibility="{Binding IsFolder, Converter={StaticResource InverseBooleanToVisibilityConverter}}"
                                         Command="{Binding DataContext.OpenWithDefaultEditorCommand, ElementName=RootGrid}"
-                                        CommandParameter="{Binding}" />
+                                        CommandParameter="{Binding}"
+                                        Text="編輯"
+                                        Visibility="{Binding IsFolder, Converter={StaticResource InverseBooleanToVisibilityConverter}}" />
                                     <MenuFlyoutItem
-                                        Text="打開所在資料夾"
                                         Command="{Binding DataContext.OpenInExplorerCommand, ElementName=RootGrid}"
-                                        CommandParameter="{Binding}" />
+                                        CommandParameter="{Binding}"
+                                        Text="打開所在資料夾" />
                                 </MenuFlyout>
                             </Border.ContextFlyout>
                         </Border>
