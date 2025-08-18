@@ -32,16 +32,6 @@ namespace MeowTextReader.ReaderPage
         private void ReaderPage_Loaded(object sender, RoutedEventArgs e)
         {
             _scrollViewer = FindScrollViewer(ReaderTextListView);
-
-            // work around to make sure KeyDown happens every time
-            LostFocus += (s, arg) =>
-            {
-                DispatcherQueue.TryEnqueue(async () =>
-                {
-                    await Task.Delay(500);
-                    Focus(FocusState.Programmatic);
-                });
-            };
             KeyDown += ReaderTextListView_KeyDown;
         }
 
