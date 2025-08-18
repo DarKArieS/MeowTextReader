@@ -32,6 +32,17 @@ namespace MeowTextReader.ReaderPage
         private void ReaderPage_Loaded(object sender, RoutedEventArgs e)
         {
             _scrollViewer = FindScrollViewer(ReaderTextListView);
+
+            // work around to make sure KeyDown happens every time
+            LostFocus += (s, arg) =>
+            {
+                DispatcherQueue.TryEnqueue(async () =>
+                {
+                    await Task.Delay(500);
+                    Focus(FocusState.Programmatic);
+                });
+            };
+            KeyDown += ReaderTextListView_KeyDown;
         }
 
         private void UpdateTitlePercentText()
@@ -85,6 +96,7 @@ namespace MeowTextReader.ReaderPage
             if (_scrollViewer != null)
                 _scrollViewer.ViewChanged -= ScrollViewer_ViewChanged;
             _debounceTimer?.Dispose();
+            KeyDown -= ReaderTextListView_KeyDown;
             ReaderTextListView.Loaded -= ReaderTextListView_Loaded;
         }
 
@@ -139,7 +151,15 @@ namespace MeowTextReader.ReaderPage
 
         private void SettingsButton_Click(object sender, RoutedEventArgs e)
         {
-            SettingsTeachingTip.IsOpen = true;
+            if (SettingsTeachingTip.IsOpen)
+            {
+                SettingsTeachingTip.IsOpen = false;
+
+            }
+            else
+            {
+                SettingsTeachingTip.IsOpen = true;
+            }
         }
 
         private void ReaderTextListView_Tapped(object sender, Microsoft.UI.Xaml.Input.TappedRoutedEventArgs e)
@@ -213,13 +233,13 @@ namespace MeowTextReader.ReaderPage
         private void LeftOverlay_Tapped(object sender, TappedRoutedEventArgs e)
         {
             ScrollUp();
-            e.Handled = true;
+            e.Handled = false;
         }
 
         private void RightOverlay_Tapped(object sender, TappedRoutedEventArgs e)
         {
             ScrollDown();
-            e.Handled = true;
+            e.Handled = false;
         }
     }
 }
