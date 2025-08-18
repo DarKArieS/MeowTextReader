@@ -12,6 +12,7 @@ namespace MeowTextReader.MainPage
     {
         public string Name { get; set; } = string.Empty;
         public bool IsFolder { get; set; }
+        public string FullPath { get; set; } = string.Empty; // 新增完整路徑屬性
     }
 
     public class MainPageViewModel : INotifyPropertyChanged
@@ -34,11 +35,15 @@ namespace MeowTextReader.MainPage
 
         public ICommand FolderItemClickCommand { get; }
         public ICommand BackCommand { get; }
+        public ICommand OpenWithDefaultEditorCommand { get; }
+        public ICommand OpenInExplorerCommand { get; }
 
         public MainPageViewModel()
         {
             FolderItemClickCommand = new RelayCommand<FileItem>(OnFolderItemClick);
             BackCommand = new RelayCommand(BackToParent);
+            OpenWithDefaultEditorCommand = new RelayCommand<FileItem>(OpenWithDefaultEditor, CanOpenFile);
+            OpenInExplorerCommand = new RelayCommand<FileItem>(OpenInExplorer, (i) => true);
             OnPropertyChanged(nameof(FolderPath));
             LoadFolderItems();
         }
@@ -63,6 +68,40 @@ namespace MeowTextReader.MainPage
             }
         }
 
+        private bool CanOpenFile(FileItem? item)
+        {
+            return item != null && !item.IsFolder && !string.IsNullOrEmpty(item.FullPath);
+        }
+
+        private void OpenWithDefaultEditor(FileItem? item)
+        {
+            if (item == null || item.IsFolder || string.IsNullOrEmpty(item.FullPath)) return;
+            try
+            {
+                System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+                {
+                    FileName = item.FullPath,
+                    UseShellExecute = true
+                });
+            }
+            catch { }
+        }
+
+        private void OpenInExplorer(FileItem? item)
+        {
+            if (item == null || string.IsNullOrEmpty(item.FullPath)) return;
+            try
+            {
+                System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+                {
+                    FileName = "explorer.exe",
+                    Arguments = $"/select,\"{item.FullPath}\"",
+                    UseShellExecute = true
+                });
+            }
+            catch { }
+        }
+
         private void LoadFolderItems()
         {
             FolderItems.Clear();
@@ -83,7 +122,7 @@ namespace MeowTextReader.MainPage
                             return false;
                         }
                     })
-                    .Select(d => new FileItem { Name = Path.GetFileName(d), IsFolder = true });
+                    .Select(d => new FileItem { Name = Path.GetFileName(d), IsFolder = true, FullPath = d });
                 var txts = Directory.GetFiles(FolderPath, "*.txt")
                     .Where(f =>
                     {
@@ -97,7 +136,7 @@ namespace MeowTextReader.MainPage
                             return false;
                         }
                     })
-                    .Select(f => new FileItem { Name = Path.GetFileName(f), IsFolder = false });
+                    .Select(f => new FileItem { Name = Path.GetFileName(f), IsFolder = false, FullPath = f });
                 foreach (var item in dirs.Concat(txts))
                     FolderItems.Add(item);
             }
