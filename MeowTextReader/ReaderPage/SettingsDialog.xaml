@@ -40,7 +40,7 @@
         </StackPanel>
 
         <TextBlock
-            Margin="8,0,0,0"
+            Margin="8,8,0,0"
             Text="背景色"
             Visibility="{Binding IsCustomColor, Converter={StaticResource BooleanToVisibilityConverter}}" />
         <StackPanel
@@ -55,7 +55,7 @@
         </StackPanel>
 
         <TextBlock
-            Margin="8,0,0,0"
+            Margin="8,8,0,0"
             Text="文字顏色"
             Visibility="{Binding IsCustomColor, Converter={StaticResource BooleanToVisibilityConverter}}" />
         <StackPanel
