@@ -9,6 +9,7 @@
 
     <Page.Resources>
         <local:FolderBoldConverter x:Key="FolderBoldConverter" />
+        <local:InverseBooleanToVisibilityConverter x:Key="InverseBooleanToVisibilityConverter" />
     </Page.Resources>
     
     <Grid x:Name="RootGrid" Margin="20">
@@ -49,6 +50,19 @@
                             BorderBrush="Gray"
                             BorderThickness="0,0,0,1">
                             <TextBlock FontWeight="{Binding IsFolder, Converter={StaticResource FolderBoldConverter}}" Text="{Binding Name}" />
+                            <Border.ContextFlyout>
+                                <MenuFlyout>
+                                    <MenuFlyoutItem
+                                        Text="編輯"
+                                        Visibility="{Binding IsFolder, Converter={StaticResource InverseBooleanToVisibilityConverter}}"
+                                        Command="{Binding DataContext.OpenWithDefaultEditorCommand, ElementName=RootGrid}"
+                                        CommandParameter="{Binding}" />
+                                    <MenuFlyoutItem
+                                        Text="打開所在資料夾"
+                                        Command="{Binding DataContext.OpenInExplorerCommand, ElementName=RootGrid}"
+                                        CommandParameter="{Binding}" />
+                                </MenuFlyout>
+                            </Border.ContextFlyout>
                         </Border>
                     </DataTemplate>
                 </ListView.ItemTemplate>
