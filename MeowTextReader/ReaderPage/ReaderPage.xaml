@@ -38,7 +38,8 @@
                         Foreground="{Binding DataContext.ForegroundBrush, ElementName=ReaderTextListView}"
                         IsTextSelectionEnabled="False"
                         Text="{Binding}"
-                        TextWrapping="WrapWholeWords" />
+                        TextWrapping="WrapWholeWords"
+                        RightTapped="LineTextBlock_RightTapped" />
                 </DataTemplate>
             </ListView.ItemTemplate>
         </ListView>
