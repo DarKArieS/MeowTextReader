@@ -154,6 +154,11 @@ namespace MeowTextReader.ReaderPage
 
         private void ReaderTextListView_Tapped(object sender, Microsoft.UI.Xaml.Input.TappedRoutedEventArgs e)
         {
+            ToggleTopPanel();
+            e.Handled = true;
+        }
+
+        private void ToggleTopPanel() {
             if (TopPanel.Visibility == Visibility.Visible)
             {
                 var slideOut = (Storyboard)this.Resources["SlideOutTopPanel"];
@@ -175,8 +180,6 @@ namespace MeowTextReader.ReaderPage
                 anim.To = 0;
                 slideIn.Begin();
             }
-
-            e.Handled = true;
         }
 
         private const double scrollDelta = 300;
