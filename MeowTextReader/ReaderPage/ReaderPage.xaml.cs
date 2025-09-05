@@ -221,6 +221,11 @@ namespace MeowTextReader.ReaderPage
                 ScrollUp();
                 e.Handled = true;
             }
+            else if (e.Key == VirtualKey.Escape)
+            {
+                ToggleTopPanel();
+                e.Handled = true;
+            }
         }
 
         private void LeftOverlay_Tapped(object sender, TappedRoutedEventArgs e)
