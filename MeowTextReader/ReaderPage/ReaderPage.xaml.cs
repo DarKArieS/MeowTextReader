@@ -231,5 +231,25 @@ namespace MeowTextReader.ReaderPage
             ScrollDown();
             e.Handled = false;
         }
+
+        private void LineTextBlock_RightTapped(object sender, RightTappedRoutedEventArgs e)
+        {
+            if (sender is FrameworkElement fe && fe.DataContext is string lineText)
+            {
+                // Find index of the line in the collection
+                int lineNumber = ViewModel.FileLines.IndexOf(lineText) + 1; // 1-based
+
+                var flyout = new Flyout
+                {
+                    Content = new TextBlock
+                    {
+                        Text = $"Line: {lineNumber}",
+                        Margin = new Thickness(8,4,8,4)
+                    }
+                };
+                flyout.ShowAt(fe);
+            }
+            e.Handled = true;
+        }
     }
 }
