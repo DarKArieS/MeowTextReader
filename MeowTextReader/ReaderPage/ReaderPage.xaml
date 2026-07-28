@@ -1,4 +1,4 @@
-<Page
+﻿<Page
     x:Class="MeowTextReader.ReaderPage.ReaderPage"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
@@ -37,7 +37,7 @@
                         FontSize="{Binding DataContext.FontSize, ElementName=ReaderTextListView, FallbackValue=20}"
                         Foreground="{Binding DataContext.ForegroundBrush, ElementName=ReaderTextListView}"
                         IsTextSelectionEnabled="False"
-                        Text="{Binding}"
+                        Text="{Binding Text}"
                         TextWrapping="WrapWholeWords"
                         RightTapped="LineTextBlock_RightTapped" />
                 </DataTemplate>

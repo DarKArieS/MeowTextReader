@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.UI.Xaml;
@@ -6,6 +6,7 @@ using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Media;
 using Microsoft.UI.Xaml.Media.Animation;
 using Microsoft.UI.Xaml.Input;
+using Windows.Foundation;
 using Windows.System;
 
 namespace MeowTextReader.ReaderPage
@@ -18,6 +19,14 @@ namespace MeowTextReader.ReaderPage
         private const int DebounceMilliseconds = 500;
         private bool _isSliderUpdating = false;
         private bool _isScrollViewerUpdating = false;
+
+        /// <summary>
+        /// 還原閱讀位置的期間為 true。還原本身會觸發 ViewChanged，
+        /// 若不擋掉就會把中途（可能被夾住）的位置寫回設定檔，蓋掉正確紀錄。
+        /// </summary>
+        private bool _isRestoring = false;
+
+        private bool _hasRestored = false;
 
         public ReaderPage()
         {
@@ -35,89 +44,205 @@ namespace MeowTextReader.ReaderPage
             KeyDown += ReaderTextListView_KeyDown;
         }
 
-        private void UpdateTitlePercentText()
+        private ItemsStackPanel? ItemsPanel => ReaderTextListView.ItemsPanelRoot as ItemsStackPanel;
+
+        /// <summary>
+        /// 目前最上方可見行的索引。這是虛擬化下唯一可靠的位置來源：
+        /// ScrollViewer 的 VerticalOffset / ExtentHeight 都只是依已實體化項目推估出來的。
+        /// </summary>
+        private int? GetFirstVisibleIndex()
         {
-            if (_scrollViewer != null && ScrollSlider.Maximum > 0)
+            int index = ItemsPanel?.FirstVisibleIndex ?? -1;
+            return index >= 0 ? index : null;
+        }
+
+        private int? GetLastVisibleIndex()
+        {
+            int index = ItemsPanel?.LastVisibleIndex ?? -1;
+            return index >= 0 ? index : null;
+        }
+
+        /// <summary>
+        /// 算出指定行已經捲出視窗頂端的比例，範圍 [0, 1)。
+        /// </summary>
+        private double GetLineFraction(int lineIndex)
+        {
+            if (_scrollViewer == null) return 0;
+            if (ReaderTextListView.ContainerFromIndex(lineIndex) is not FrameworkElement container) return 0;
+
+            double height = container.ActualHeight;
+            if (height <= 0) return 0;
+
+            // 相對於 ScrollViewer 的座標即視窗座標；已捲過頂端的部分為負值。
+            double top = container.TransformToVisual(_scrollViewer).TransformPoint(new Point(0, 0)).Y;
+            return Math.Clamp(-top / height, 0, 0.999);
+        }
+
+        private void UpdateProgressUi()
+        {
+            int total = ViewModel.FileLines.Count;
+            if (total == 0)
             {
-                double percent = (ScrollSlider.Value / ScrollSlider.Maximum) * 100.0;
-                if (percent < 0) percent = 0;
-                if (percent > 100) percent = 100;
-                TitleText.Text = ViewModel.FileName + $"({percent:0.00}%)";
+                TitleText.Text = ViewModel.FileName;
+                return;
             }
-            else
+
+            if (!_isSliderUpdating)
             {
-                TitleText.Text = "0%";
+                _isScrollViewerUpdating = true;
+                ScrollSlider.Maximum = Math.Max(total - 1, 1);
+                ScrollSlider.Value = Math.Clamp(GetFirstVisibleIndex() ?? 0, 0, ScrollSlider.Maximum);
+                _isScrollViewerUpdating = false;
             }
+
+            // 以「已讀到第幾行」計算，捲到底時剛好是 100%。
+            int readLines = (GetLastVisibleIndex() ?? 0) + 1;
+            double percent = Math.Clamp((double)readLines / total * 100.0, 0, 100);
+            TitleText.Text = ViewModel.FileName + $"({percent:0.00}%)";
         }
 
         private void ReaderTextListView_Loaded(object sender, RoutedEventArgs e)
         {
             _scrollViewer = FindScrollViewer(ReaderTextListView);
+            if (_scrollViewer == null) return;
 
-            if (_scrollViewer != null)
+            _scrollViewer.ViewChanged -= ScrollViewer_ViewChanged;
+            _scrollViewer.ViewChanged += ScrollViewer_ViewChanged;
+
+            _isScrollViewerUpdating = true;
+            ScrollSlider.Minimum = 0;
+            ScrollSlider.Maximum = Math.Max(ViewModel.FileLines.Count - 1, 1);
+            _isScrollViewerUpdating = false;
+
+            if (!_hasRestored)
             {
-                ScrollSlider.Minimum = 0;
-                ScrollSlider.Maximum = _scrollViewer.ScrollableHeight > 0 ? _scrollViewer.ScrollableHeight : 1;
-                ScrollSlider.Value = _scrollViewer.VerticalOffset;
-                _scrollViewer.ViewChanged += ScrollViewer_ViewChanged;
-                UpdateTitlePercentText();
+                _hasRestored = true;
+                RestoreReadingPosition();
             }
 
-            var offset = ViewModel.GetSavedScrollOffset();
-            if (_scrollViewer != null && offset.HasValue)
+            UpdateProgressUi();
+        }
+
+        private void RestoreReadingPosition()
+        {
+            var saved = ViewModel.GetSavedPosition();
+            if (saved == null || ViewModel.FileLines.Count == 0) return;
+
+            if (saved.LineIndex is int lineIndex)
             {
-                DispatcherQueue.TryEnqueue(async () =>
-                {
-                    LoadingRing.IsActive = true;
-                    LoadingRing.Visibility = Visibility.Visible;
-                    ReaderTextListView.IsEnabled = false;
-                    await Task.Delay(1000);
-                    _scrollViewer.ChangeView(null, (double)offset.Value, null, true);
-                    UpdateTitlePercentText();
-                    LoadingRing.IsActive = false;
-                    LoadingRing.Visibility = Visibility.Collapsed;
-                    ReaderTextListView.IsEnabled = true;
-                });
+                ScrollToLine(lineIndex, saved.LineFraction);
             }
+            else if (saved.ScrollOffset > 0)
+            {
+                RestoreLegacyPixelOffset(saved.ScrollOffset);
+            }
+        }
+
+        /// <summary>
+        /// 捲到指定行。ScrollIntoView 由 ListView 自行處理虛擬化，
+        /// 不必等 extent 估算完成，也不會被夾在還沒實體化的範圍內。
+        /// </summary>
+        private void ScrollToLine(int lineIndex, double lineFraction)
+        {
+            if (ViewModel.FileLines.Count == 0) return;
+            lineIndex = Math.Clamp(lineIndex, 0, ViewModel.FileLines.Count - 1);
+
+            _isRestoring = true;
+            ReaderTextListView.ScrollIntoView(ViewModel.FileLines[lineIndex], ScrollIntoViewAlignment.Leading);
+
+            // 容器要等下一次 layout 才就位，行內微調與解除旗標都得排在其後。
+            DispatcherQueue.TryEnqueue(Microsoft.UI.Dispatching.DispatcherQueuePriority.Low, () =>
+            {
+                ApplyLineFraction(lineIndex, lineFraction);
+                _isRestoring = false;
+                UpdateProgressUi();
+            });
+        }
+
+        private void ApplyLineFraction(int lineIndex, double lineFraction)
+        {
+            if (_scrollViewer == null || lineFraction <= 0) return;
+            if (ReaderTextListView.ContainerFromIndex(lineIndex) is not FrameworkElement container) return;
+
+            double top = container.TransformToVisual(_scrollViewer).TransformPoint(new Point(0, 0)).Y;
+            double target = _scrollViewer.VerticalOffset + top + container.ActualHeight * lineFraction;
+            _scrollViewer.ChangeView(null, target, null, true);
+        }
+
+        /// <summary>
+        /// 一次性遷移：舊設定檔存的是像素偏移量，只能沿用原本「等 extent 估算完成」的做法，
+        /// 還原後立刻改存行索引，之後就不會再走這條路徑。
+        /// </summary>
+        private void RestoreLegacyPixelOffset(int scrollOffset)
+        {
+            if (_scrollViewer == null) return;
+
+            _isRestoring = true; // 同步設定，避免等待期間的 ViewChanged 先把位置寫回去
+            DispatcherQueue.TryEnqueue(async () =>
+            {
+                LoadingRing.IsActive = true;
+                LoadingRing.Visibility = Visibility.Visible;
+                ReaderTextListView.IsEnabled = false;
+
+                await Task.Delay(1000);
+                _scrollViewer.ChangeView(null, scrollOffset, null, true);
+                await Task.Delay(100);
+
+                LoadingRing.IsActive = false;
+                LoadingRing.Visibility = Visibility.Collapsed;
+                ReaderTextListView.IsEnabled = true;
+                _isRestoring = false;
+
+                SaveCurrentPosition();
+                UpdateProgressUi();
+            });
+        }
+
+        private void SaveCurrentPosition()
+        {
+            if (_isRestoring) return;
+            if (GetFirstVisibleIndex() is not int lineIndex) return;
+
+            ViewModel.SaveReadingPosition(lineIndex, GetLineFraction(lineIndex));
         }
 
         private void ReaderPage_Unloaded(object sender, RoutedEventArgs e)
         {
             if (_scrollViewer != null)
                 _scrollViewer.ViewChanged -= ScrollViewer_ViewChanged;
+
             _debounceTimer?.Dispose();
+            _debounceTimer = null;
+
+            // 立即寫入，否則最後一次捲動若落在 debounce 視窗內就會遺失。
+            SaveCurrentPosition();
+
             KeyDown -= ReaderTextListView_KeyDown;
             ReaderTextListView.Loaded -= ReaderTextListView_Loaded;
         }
 
         private void ScrollViewer_ViewChanged(object? sender, ScrollViewerViewChangedEventArgs e)
         {
+            UpdateProgressUi();
+
+            if (_isRestoring) return;
+
             _debounceTimer?.Dispose();
             _debounceTimer = new Timer(_ =>
             {
-                var offset = _scrollViewer?.VerticalOffset ?? 0;
-                ViewModel.SaveScrollOffset(offset);
+                // Timer callback 跑在執行緒集區，UI 物件只能在 UI 執行緒上讀取。
+                DispatcherQueue.TryEnqueue(SaveCurrentPosition);
             }, null, DebounceMilliseconds, Timeout.Infinite);
-
-            if (_scrollViewer != null && !_isSliderUpdating)
-            {
-                _isScrollViewerUpdating = true;
-                ScrollSlider.Maximum = _scrollViewer.ScrollableHeight > 0 ? _scrollViewer.ScrollableHeight : 1;
-                ScrollSlider.Value = _scrollViewer.VerticalOffset;
-                UpdateTitlePercentText();
-                _isScrollViewerUpdating = false;
-            }
         }
 
         private void ScrollSlider_ValueChanged(object sender, Microsoft.UI.Xaml.Controls.Primitives.RangeBaseValueChangedEventArgs e)
         {
-            if (_scrollViewer != null && !_isScrollViewerUpdating)
-            {
-                _isSliderUpdating = true;
-                _scrollViewer.ChangeView(null, e.NewValue, null, true);
-                UpdateTitlePercentText();
-                _isSliderUpdating = false;
-            }
+            if (_isScrollViewerUpdating || ViewModel.FileLines.Count == 0) return;
+
+            int lineIndex = Math.Clamp((int)Math.Round(e.NewValue), 0, ViewModel.FileLines.Count - 1);
+            _isSliderUpdating = true;
+            ReaderTextListView.ScrollIntoView(ViewModel.FileLines[lineIndex], ScrollIntoViewAlignment.Leading);
+            _isSliderUpdating = false;
         }
 
         private void BackButton_Click(object sender, RoutedEventArgs e)
@@ -162,7 +287,7 @@ namespace MeowTextReader.ReaderPage
             if (TopPanel.Visibility == Visibility.Visible)
             {
                 var slideOut = (Storyboard)this.Resources["SlideOutTopPanel"];
-                // �]�w�ʵe To �� -TopPanel.ActualHeight
+                // 設定動畫 To 為 -TopPanel.ActualHeight
                 var anim = (DoubleAnimation)slideOut.Children[0];
                 anim.To = -TopPanel.ActualHeight;
                 slideOut.Completed += SlideOut_Completed;
@@ -170,7 +295,7 @@ namespace MeowTextReader.ReaderPage
             }
             else
             {
-                // ���N TopPanel ����e���~
+                // 先將 TopPanel 移到畫面外
                 var tt = TopPanel.RenderTransform as TranslateTransform;
                 if (tt != null) tt.Y = -TopPanel.ActualHeight;
                 TopPanel.Visibility = Visibility.Visible;
@@ -242,16 +367,13 @@ namespace MeowTextReader.ReaderPage
 
         private void LineTextBlock_RightTapped(object sender, RightTappedRoutedEventArgs e)
         {
-            if (sender is FrameworkElement fe && fe.DataContext is string lineText)
+            if (sender is FrameworkElement fe && fe.DataContext is LineItem line)
             {
-                // Find index of the line in the collection
-                int lineNumber = ViewModel.FileLines.IndexOf(lineText) + 1; // 1-based
-
                 var flyout = new Flyout
                 {
                     Content = new TextBlock
                     {
-                        Text = $"Line: {lineNumber}",
+                        Text = $"Line: {line.LineNumber}",
                         Margin = new Thickness(8,4,8,4)
                     }
                 };

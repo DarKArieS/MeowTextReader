@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.IO;
@@ -14,7 +14,7 @@ namespace MeowTextReader.ReaderPage
         private double _fontSize;
         private Brush? _backgroundBrush;
         private Brush? _foregroundBrush;
-        public ObservableCollection<string> FileLines { get; } = new();
+        public ObservableCollection<LineItem> FileLines { get; } = new();
 
         public string? FileName
         {
@@ -95,24 +95,27 @@ namespace MeowTextReader.ReaderPage
             if (!string.IsNullOrEmpty(path) && File.Exists(path))
             {
                 var lines = File.ReadAllLines(path);
-                foreach (var line in lines)
-                    FileLines.Add(line);
+                for (int i = 0; i < lines.Length; i++)
+                    FileLines.Add(new LineItem(i, lines[i]));
             }
         }
 
-        public void SaveScrollOffset(double offset)
+        /// <summary>
+        /// 以行索引 + 行內比例記錄閱讀位置。
+        /// </summary>
+        public void SaveReadingPosition(int lineIndex, double lineFraction)
         {
             if (!string.IsNullOrEmpty(FileName))
             {
-                MainRepo.Instance.UpdateHistory(FileName, offset);
+                MainRepo.Instance.UpdateHistory(FileName, lineIndex, lineFraction);
             }
         }
 
-        public int? GetSavedScrollOffset()
+        public MainRepo.HistoryItem? GetSavedPosition()
         {
             if (!string.IsNullOrEmpty(FileName))
             {
-                return MainRepo.Instance.GetHistoryScrollOffset(FileName);
+                return MainRepo.Instance.GetHistoryItem(FileName);
             }
             return null;
         }

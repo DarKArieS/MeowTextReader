@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.IO;
 using System.Text.Json;
 using System.Collections.Generic;
@@ -12,13 +12,13 @@ namespace MeowTextReader
         ReaderPage
     }
 
-    public class ReaderSetting // ���X MainRepo class�A�@���W�� public class
+    public class ReaderSetting // 移出 MainRepo class，作為獨立 public class
     {
         public double FontSize { get; set; } = 20.0;
-        public string? CustomBackgroundColor { get; set; } = null; // ��W
-        public bool UseCustomBackgroundColor { get; set; } = false; // �s�W
-        public string? CustomForegroundColor { get; set; } = null; // �s�W
-        public bool UseCustomForegroundColor { get; set; } = false; // �s�W
+        public string? CustomBackgroundColor { get; set; } = null; // 改名
+        public bool UseCustomBackgroundColor { get; set; } = false; // 新增
+        public string? CustomForegroundColor { get; set; } = null; // 新增
+        public bool UseCustomForegroundColor { get; set; } = false; // 新增
     }
 
     public class MainRepo
@@ -33,7 +33,22 @@ namespace MeowTextReader
         public class HistoryItem
         {
             public string? FileName { get; set; }
+
+            /// <summary>
+            /// 舊版欄位：像素捲動偏移量。僅供一次性資料遷移，新程式不再寫入。
+            /// </summary>
             public int ScrollOffset { get; set; }
+
+            /// <summary>
+            /// 最上方可見行的索引（0-based）。這是位置的絕對錨點，不受字體大小、
+            /// 視窗尺寸或虛擬化估算誤差影響。
+            /// </summary>
+            public int? LineIndex { get; set; }
+
+            /// <summary>
+            /// 在 LineIndex 該行內的細部偏移比例，範圍 [0, 1)。
+            /// </summary>
+            public double LineFraction { get; set; }
         }
 
         private class AppConfig
@@ -137,26 +152,31 @@ namespace MeowTextReader
 
         public List<HistoryItem> History => _config.history;
 
-        public void UpdateHistory(string fileName, double scrollOffset)
+        /// <summary>
+        /// 記錄閱讀位置。以行索引為錨點，不再儲存像素偏移量。
+        /// </summary>
+        public void UpdateHistory(string fileName, int lineIndex, double lineFraction)
         {
-            int offsetInt = (int)Math.Round(scrollOffset);
             var item = _config.history.FirstOrDefault(h => h.FileName == fileName);
             if (item == null)
             {
-                item = new HistoryItem { FileName = fileName, ScrollOffset = offsetInt };
+                item = new HistoryItem { FileName = fileName };
                 _config.history.Add(item);
             }
-            else
+            else if (item.LineIndex == lineIndex && Math.Abs(item.LineFraction - lineFraction) < 0.01)
             {
-                item.ScrollOffset = offsetInt;
+                return; // 位置沒有實質變化，不需要重寫設定檔
             }
+
+            item.LineIndex = lineIndex;
+            item.LineFraction = lineFraction;
+            item.ScrollOffset = 0; // 舊欄位已遷移完成
             SaveConfig();
         }
 
-        public int? GetHistoryScrollOffset(string fileName)
+        public HistoryItem? GetHistoryItem(string fileName)
         {
-            var item = _config.history.FirstOrDefault(h => h.FileName == fileName);
-            return item?.ScrollOffset;
+            return _config.history.FirstOrDefault(h => h.FileName == fileName);
         }
 
         public void SetOpenFilePath(string path)
