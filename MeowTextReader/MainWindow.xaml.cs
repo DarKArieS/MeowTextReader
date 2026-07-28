@@ -1,4 +1,4 @@
-using Microsoft.UI.Xaml;
+ï»¿using Microsoft.UI.Xaml;
 
 namespace MeowTextReader
 {
@@ -7,7 +7,7 @@ namespace MeowTextReader
         public MainWindow()
         {
             this.InitializeComponent();
-            // ®Ú¾Ú appConfig °O¿ıªº­¶­±¨M©w±Ò°Ê­¶
+            // æ ¹æ“š appConfig è¨˜éŒ„çš„é é¢æ±ºå®šå•Ÿå‹•é 
             var lastPage = MainRepo.Instance.LastPage;
             if (lastPage == AppPage.ReaderPage)
             {

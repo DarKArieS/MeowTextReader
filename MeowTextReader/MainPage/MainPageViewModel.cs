@@ -1,4 +1,4 @@
-using System.ComponentModel;
+ï»¿using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System;
 using System.Collections.ObjectModel;
@@ -12,7 +12,7 @@ namespace MeowTextReader.MainPage
     {
         public string Name { get; set; } = string.Empty;
         public bool IsFolder { get; set; }
-        public string FullPath { get; set; } = string.Empty; // ·s¼W§¹¾ã¸ô®|Äİ©Ê
+        public string FullPath { get; set; } = string.Empty; // æ–°å¢å®Œæ•´è·¯å¾‘å±¬æ€§
     }
 
     public class MainPageViewModel : INotifyPropertyChanged
@@ -146,7 +146,7 @@ namespace MeowTextReader.MainPage
         {
             try
             {
-                // ¹Á¸Õ¦CÁ|¤º®e¥H´ú¸ÕÅv­­
+                // å˜—è©¦åˆ—èˆ‰å…§å®¹ä»¥æ¸¬è©¦æ¬Šé™
                 Directory.GetFiles(path, "*", SearchOption.TopDirectoryOnly);
                 return true;
             }

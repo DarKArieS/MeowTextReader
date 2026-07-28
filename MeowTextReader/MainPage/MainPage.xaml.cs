@@ -1,4 +1,4 @@
-using System;
+ï»¿using System;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Windows.Storage;
@@ -45,10 +45,10 @@ namespace MeowTextReader.MainPage
                 }
                 else if (fileItem.Name.EndsWith(".txt", StringComparison.OrdinalIgnoreCase))
                 {
-                    // ±N§¹¾ã¸ô®|¦s¤J MainRepo appConfig.json
+                    // å°‡å®Œæ•´è·¯å¾‘å­˜å…¥ MainRepo appConfig.json
                     var filePath = System.IO.Path.Combine(ViewModel.FolderPath ?? string.Empty, fileItem.Name);
                     MainRepo.Instance.SetOpenFilePath(filePath);
-                    // ¸õÂà¨ì ReaderPage
+                    // è·³è½‰åˆ° ReaderPage
                     Frame.Navigate(typeof(MeowTextReader.ReaderPage.ReaderPage));
                 }
             }

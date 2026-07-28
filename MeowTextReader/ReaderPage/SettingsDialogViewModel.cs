@@ -1,4 +1,4 @@
-using System.ComponentModel;
+Ôªøusing System.ComponentModel;
 using System.Runtime.CompilerServices;
 
 namespace MeowTextReader.ReaderPage
@@ -90,7 +90,7 @@ namespace MeowTextReader.ReaderPage
         {
             _fontSize = repo.FontSize;
             var setting = repo.ReaderSettingObj;
-            // ≠I¥∫¶‚
+            // ËÉåÊôØËâ≤
             if (setting.UseCustomBackgroundColor && !string.IsNullOrWhiteSpace(setting.CustomBackgroundColor))
             {
                 _isCustomColor = true;
@@ -107,7 +107,7 @@ namespace MeowTextReader.ReaderPage
                     _customBackgroundColorText = null;
                 }
             }
-            // §Â¶r√C¶‚
+            // ÊñáÂ≠óÈ°èËâ≤
             if (setting.UseCustomForegroundColor && !string.IsNullOrWhiteSpace(setting.CustomForegroundColor))
             {
                 _customTextColorText = setting.CustomForegroundColor;

@@ -1,4 +1,4 @@
-using System;
+ï»¿using System;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Input;
@@ -33,7 +33,7 @@ namespace MeowTextReader.ReaderPage
 
         private void FontSizeTextBox_PreviewKeyDown(object sender, KeyRoutedEventArgs e)
         {
-            // ¥u¤¹³\¼Æ¦r¡B§R°£¡B¤è¦VÁä
+            // åªå…è¨±æ•¸å­—ã€åˆªé™¤ã€æ–¹å‘éµ
             if (!(e.Key >= Windows.System.VirtualKey.Number0 && e.Key <= Windows.System.VirtualKey.Number9) &&
                 !(e.Key >= Windows.System.VirtualKey.NumberPad0 && e.Key <= Windows.System.VirtualKey.NumberPad9) &&
                 e.Key != Windows.System.VirtualKey.Back &&
@@ -76,10 +76,10 @@ namespace MeowTextReader.ReaderPage
             }
             var dialog = new ContentDialog
             {
-                Title = "¿ï¾ÜÃC¦â",
+                Title = "é¸æ“‡é¡è‰²",
                 Content = colorPicker,
-                PrimaryButtonText = "½T©w",
-                CloseButtonText = "¨ú®ø",
+                PrimaryButtonText = "ç¢ºå®š",
+                CloseButtonText = "å–æ¶ˆ",
                 XamlRoot = this.XamlRoot
             };
             if (await dialog.ShowAsync() == ContentDialogResult.Primary)
@@ -107,10 +107,10 @@ namespace MeowTextReader.ReaderPage
             }
             var dialog = new ContentDialog
             {
-                Title = "¿ï¾Ü¤å¦rÃC¦â",
+                Title = "é¸æ“‡æ–‡å­—é¡è‰²",
                 Content = colorPicker,
-                PrimaryButtonText = "½T©w",
-                CloseButtonText = "¨ú®ø",
+                PrimaryButtonText = "ç¢ºå®š",
+                CloseButtonText = "å–æ¶ˆ",
                 XamlRoot = this.XamlRoot
             };
             if (await dialog.ShowAsync() == ContentDialogResult.Primary)
