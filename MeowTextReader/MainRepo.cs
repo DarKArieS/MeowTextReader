@@ -27,6 +27,19 @@ namespace MeowTextReader
         public bool UseCustomForegroundColor { get; set; } = false; // 新增
     }
 
+    /// <summary>
+    /// 視窗上次關閉時的位置與大小（實體像素）。最大化時記錄的是還原後的大小，
+    /// 這樣下次開啟先最大化、使用者按還原時才會回到合理尺寸。
+    /// </summary>
+    public class WindowPlacement
+    {
+        public int X { get; set; }
+        public int Y { get; set; }
+        public int Width { get; set; }
+        public int Height { get; set; }
+        public bool IsMaximized { get; set; }
+    }
+
     public class MainRepo
     {
         private static readonly Lazy<MainRepo> _instance = new(() => new MainRepo());
@@ -78,6 +91,7 @@ namespace MeowTextReader
             public ReaderSetting ReaderSetting { get; set; } = new ReaderSetting();
             public List<HistoryItem> history { get; set; } = new();
             public List<FolderScrollHistoryItem> FolderScrollPositions { get; set; } = new();
+            public WindowPlacement? WindowPlacement { get; set; }
         }
 
         private MainRepo()
@@ -257,6 +271,25 @@ namespace MeowTextReader
         {
             return _config.FolderScrollPositions.FirstOrDefault(
                 f => string.Equals(f.FolderPath, folderPath, StringComparison.OrdinalIgnoreCase));
+        }
+
+        public WindowPlacement? WindowPlacement
+        {
+            get => _config.WindowPlacement;
+            set
+            {
+                var current = _config.WindowPlacement;
+                if (current != null && value != null
+                    && current.X == value.X && current.Y == value.Y
+                    && current.Width == value.Width && current.Height == value.Height
+                    && current.IsMaximized == value.IsMaximized)
+                {
+                    return; // 沒有實質變化，不需要重寫設定檔
+                }
+
+                _config.WindowPlacement = value;
+                SaveConfig();
+            }
         }
 
         public void SetOpenFilePath(string path)
