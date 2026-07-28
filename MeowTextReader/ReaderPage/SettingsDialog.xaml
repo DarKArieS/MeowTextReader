@@ -26,6 +26,18 @@
             <Button Click="IncreaseFontSize_Click" Content="+" />
         </StackPanel>
 
+        <TextBlock Margin="0,16,0,8" Text="行距" />
+        <StackPanel Orientation="Horizontal">
+            <Button Click="DecreaseLineSpacing_Click" Content="-" />
+            <TextBlock
+                Width="60"
+                Margin="4,0"
+                VerticalAlignment="Center"
+                Text="{Binding LineSpacingText}"
+                TextAlignment="Center" />
+            <Button Click="IncreaseLineSpacing_Click" Content="+" />
+        </StackPanel>
+
         <TextBlock Margin="0,16,0,0" Text="背景文字顏色" />
         <StackPanel Orientation="Horizontal">
             <RadioButton

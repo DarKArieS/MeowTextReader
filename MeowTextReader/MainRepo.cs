@@ -15,6 +15,12 @@ namespace MeowTextReader
     public class ReaderSetting // 移出 MainRepo class，作為獨立 public class
     {
         public double FontSize { get; set; } = 20.0;
+
+        /// <summary>
+        /// 行距倍率，實際行高為 FontSize * LineSpacing。
+        /// </summary>
+        public double LineSpacing { get; set; } = 1.5;
+
         public string? CustomBackgroundColor { get; set; } = null; // 改名
         public bool UseCustomBackgroundColor { get; set; } = false; // 新增
         public string? CustomForegroundColor { get; set; } = null; // 新增
@@ -156,6 +162,32 @@ namespace MeowTextReader
                 if (_readerSettingCache.FontSize != value)
                 {
                     _readerSettingCache.FontSize = value;
+                    SaveConfig();
+                    ReaderSettingChanged?.Invoke();
+                }
+            }
+        }
+
+        // 下限不設 1.0：行高等於字級時中文字的上下會被裁掉。
+        public const double MinLineSpacing = 1.2;
+        public const double MaxLineSpacing = 3.0;
+        public const double LineSpacingStep = 0.1;
+        public const double DefaultLineSpacing = 1.5;
+
+        public double LineSpacing
+        {
+            get
+            {
+                // 舊設定檔沒有這個欄位時可能讀到 0，視為未設定。
+                var value = _readerSettingCache.LineSpacing;
+                return value > 0 ? value : DefaultLineSpacing;
+            }
+            set
+            {
+                var clamped = Math.Round(Math.Clamp(value, MinLineSpacing, MaxLineSpacing), 1);
+                if (_readerSettingCache.LineSpacing != clamped)
+                {
+                    _readerSettingCache.LineSpacing = clamped;
                     SaveConfig();
                     ReaderSettingChanged?.Invoke();
                 }

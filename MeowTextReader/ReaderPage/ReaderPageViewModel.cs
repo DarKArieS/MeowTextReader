@@ -12,6 +12,7 @@ namespace MeowTextReader.ReaderPage
     {
         private string? _fileName;
         private double _fontSize;
+        private double _lineSpacing;
         private Brush? _backgroundBrush;
         private Brush? _foregroundBrush;
         public ObservableCollection<LineItem> FileLines { get; } = new();
@@ -38,9 +39,32 @@ namespace MeowTextReader.ReaderPage
                 {
                     _fontSize = value;
                     OnPropertyChanged();
+                    OnPropertyChanged(nameof(LineHeight));
                 }
             }
         }
+
+        /// <summary>
+        /// 行距倍率。設定值本身，實際渲染用 <see cref="LineHeight"/>。
+        /// </summary>
+        public double LineSpacing
+        {
+            get => _lineSpacing;
+            set
+            {
+                if (_lineSpacing != value)
+                {
+                    _lineSpacing = value;
+                    OnPropertyChanged();
+                    OnPropertyChanged(nameof(LineHeight));
+                }
+            }
+        }
+
+        /// <summary>
+        /// 每一行文字的實際行高（含行距）。
+        /// </summary>
+        public double LineHeight => FontSize * LineSpacing;
 
         public Brush? BackgroundBrush
         {
@@ -77,6 +101,7 @@ namespace MeowTextReader.ReaderPage
                 LoadFileLines(path);
             }
             FontSize = MainRepo.Instance.FontSize;
+            LineSpacing = MainRepo.Instance.LineSpacing;
             UpdateBackgroundBrush();
             UpdateForegroundBrush();
             MainRepo.ReaderSettingChanged += OnReaderSettingChanged;
@@ -85,6 +110,7 @@ namespace MeowTextReader.ReaderPage
         private void OnReaderSettingChanged()
         {
             FontSize = MainRepo.Instance.FontSize;
+            LineSpacing = MainRepo.Instance.LineSpacing;
             UpdateBackgroundBrush();
             UpdateForegroundBrush();
         }

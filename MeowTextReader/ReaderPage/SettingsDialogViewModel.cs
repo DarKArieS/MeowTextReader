@@ -1,4 +1,6 @@
-﻿using System.ComponentModel;
+﻿using System;
+using System.ComponentModel;
+using System.Globalization;
 using System.Runtime.CompilerServices;
 
 namespace MeowTextReader.ReaderPage
@@ -6,6 +8,7 @@ namespace MeowTextReader.ReaderPage
     public class SettingsDialogViewModel : INotifyPropertyChanged
     {
         private double _fontSize;
+        private double _lineSpacing;
         private bool _isCustomColor;
         private string? _customBackgroundColorText;
         private string? _customTextColorText;
@@ -24,6 +27,32 @@ namespace MeowTextReader.ReaderPage
                 }
             }
         }
+
+        /// <summary>
+        /// 行距倍率，範圍 [MainRepo.MinLineSpacing, MainRepo.MaxLineSpacing]。
+        /// </summary>
+        public double LineSpacing
+        {
+            get => _lineSpacing;
+            set
+            {
+                var clamped = Math.Round(
+                    Math.Clamp(value, MainRepo.MinLineSpacing, MainRepo.MaxLineSpacing), 1);
+                if (_lineSpacing != clamped)
+                {
+                    _lineSpacing = clamped;
+                    OnPropertyChanged();
+                    OnPropertyChanged(nameof(LineSpacingText));
+                    repo.LineSpacing = clamped;
+                }
+            }
+        }
+
+        public string LineSpacingText => _lineSpacing.ToString("0.0", CultureInfo.InvariantCulture);
+
+        public void IncreaseLineSpacing() => LineSpacing += MainRepo.LineSpacingStep;
+
+        public void DecreaseLineSpacing() => LineSpacing -= MainRepo.LineSpacingStep;
 
         public bool IsCustomColor
         {
@@ -89,6 +118,7 @@ namespace MeowTextReader.ReaderPage
         public SettingsDialogViewModel()
         {
             _fontSize = repo.FontSize;
+            _lineSpacing = repo.LineSpacing;
             var setting = repo.ReaderSettingObj;
             // 背景色
             if (setting.UseCustomBackgroundColor && !string.IsNullOrWhiteSpace(setting.CustomBackgroundColor))

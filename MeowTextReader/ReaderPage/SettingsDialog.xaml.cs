@@ -31,6 +31,22 @@ namespace MeowTextReader.ReaderPage
             }
         }
 
+        private void DecreaseLineSpacing_Click(object sender, RoutedEventArgs e)
+        {
+            if (DataContext is SettingsDialogViewModel vm)
+            {
+                vm.DecreaseLineSpacing();
+            }
+        }
+
+        private void IncreaseLineSpacing_Click(object sender, RoutedEventArgs e)
+        {
+            if (DataContext is SettingsDialogViewModel vm)
+            {
+                vm.IncreaseLineSpacing();
+            }
+        }
+
         private void FontSizeTextBox_PreviewKeyDown(object sender, KeyRoutedEventArgs e)
         {
             // 只允許數字、刪除、方向鍵

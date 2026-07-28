@@ -31,12 +31,23 @@
             ItemsSource="{Binding FileLines}"
             SelectionMode="None"
             Tapped="ReaderTextListView_Tapped">
+            <ListView.ItemContainerStyle>
+                <!--  行距要能實際反映在畫面上，容器不能再有固定最小高度  -->
+                <Style TargetType="ListViewItem">
+                    <Setter Property="MinHeight" Value="0" />
+                    <Setter Property="Padding" Value="12,0,12,0" />
+                    <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                    <Setter Property="VerticalContentAlignment" Value="Stretch" />
+                </Style>
+            </ListView.ItemContainerStyle>
             <ListView.ItemTemplate>
                 <DataTemplate>
                     <TextBlock
                         FontSize="{Binding DataContext.FontSize, ElementName=ReaderTextListView, FallbackValue=20}"
                         Foreground="{Binding DataContext.ForegroundBrush, ElementName=ReaderTextListView}"
                         IsTextSelectionEnabled="False"
+                        LineHeight="{Binding DataContext.LineHeight, ElementName=ReaderTextListView, FallbackValue=30}"
+                        LineStackingStrategy="BlockLineHeight"
                         Text="{Binding Text}"
                         TextWrapping="WrapWholeWords"
                         RightTapped="LineTextBlock_RightTapped" />
