@@ -33,6 +33,7 @@
             <TextBlock Margin="4,0,0,0" FontSize="16" Text="{Binding FolderPath, Mode=OneWay}" />
         </StackPanel>
         <ScrollViewer
+            x:Name="FolderScrollViewer"
             Grid.Row="1"
             Margin="0,10,0,0"
             HorizontalScrollBarVisibility="Visible"

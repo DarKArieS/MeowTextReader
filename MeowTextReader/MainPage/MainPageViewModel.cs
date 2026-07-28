@@ -13,6 +13,12 @@ namespace MeowTextReader.MainPage
         public string Name { get; set; } = string.Empty;
         public bool IsFolder { get; set; }
         public string FullPath { get; set; } = string.Empty; // 新增完整路徑屬性
+
+        /// <summary>
+        /// ListViewItem 的自動化名稱會回退到 ToString()，這裡回傳檔名，
+        /// 避免朗讀程式讀出型別名稱。
+        /// </summary>
+        public override string ToString() => Name;
     }
 
     public class MainPageViewModel : INotifyPropertyChanged
@@ -46,6 +52,22 @@ namespace MeowTextReader.MainPage
             OpenInExplorerCommand = new RelayCommand<FileItem>(OpenInExplorer, (i) => true);
             OnPropertyChanged(nameof(FolderPath));
             LoadFolderItems();
+        }
+
+        /// <summary>
+        /// 記錄指定資料夾的瀏覽位置。folderPath 由呼叫端傳入而非直接用 <see cref="FolderPath"/>，
+        /// 因為切換資料夾時要存的是「切換前」那個資料夾。
+        /// </summary>
+        public void SaveScrollPosition(string? folderPath, int itemIndex, double horizontalOffset)
+        {
+            if (string.IsNullOrEmpty(folderPath)) return;
+            MainRepo.Instance.UpdateFolderScrollPosition(folderPath, itemIndex, horizontalOffset);
+        }
+
+        public MainRepo.FolderScrollHistoryItem? GetSavedScrollPosition(string? folderPath)
+        {
+            if (string.IsNullOrEmpty(folderPath)) return null;
+            return MainRepo.Instance.GetFolderScrollPosition(folderPath);
         }
 
         private void OnFolderItemClick(FileItem? item)

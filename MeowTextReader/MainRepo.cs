@@ -51,6 +51,19 @@ namespace MeowTextReader
             public double LineFraction { get; set; }
         }
 
+        /// <summary>
+        /// MainPage 各資料夾的瀏覽位置。以項目索引為錨點，理由同 <see cref="HistoryItem.LineIndex"/>。
+        /// </summary>
+        public class FolderScrollHistoryItem
+        {
+            public string? FolderPath { get; set; }
+
+            /// <summary>最上方可見項目的索引（0-based）。</summary>
+            public int ItemIndex { get; set; }
+
+            public double HorizontalOffset { get; set; }
+        }
+
         private class AppConfig
         {
             public string? folderPath { get; set; }
@@ -58,6 +71,7 @@ namespace MeowTextReader
             public string? LastPage { get; set; } // serialized as string
             public ReaderSetting ReaderSetting { get; set; } = new ReaderSetting();
             public List<HistoryItem> history { get; set; } = new();
+            public List<FolderScrollHistoryItem> FolderScrollPositions { get; set; } = new();
         }
 
         private MainRepo()
@@ -177,6 +191,40 @@ namespace MeowTextReader
         public HistoryItem? GetHistoryItem(string fileName)
         {
             return _config.history.FirstOrDefault(h => h.FileName == fileName);
+        }
+
+        /// <summary>
+        /// 記錄某個資料夾在 MainPage 的瀏覽位置。
+        /// </summary>
+        public void UpdateFolderScrollPosition(string folderPath, int itemIndex, double horizontalOffset)
+        {
+            if (string.IsNullOrEmpty(folderPath)) return;
+
+            var item = FindFolderScrollItem(folderPath);
+            if (item == null)
+            {
+                item = new FolderScrollHistoryItem { FolderPath = folderPath };
+                _config.FolderScrollPositions.Add(item);
+            }
+            else if (item.ItemIndex == itemIndex && Math.Abs(item.HorizontalOffset - horizontalOffset) < 1.0)
+            {
+                return; // 位置沒有實質變化，不需要重寫設定檔
+            }
+
+            item.ItemIndex = itemIndex;
+            item.HorizontalOffset = horizontalOffset;
+            SaveConfig();
+        }
+
+        public FolderScrollHistoryItem? GetFolderScrollPosition(string folderPath)
+        {
+            return string.IsNullOrEmpty(folderPath) ? null : FindFolderScrollItem(folderPath);
+        }
+
+        private FolderScrollHistoryItem? FindFolderScrollItem(string folderPath)
+        {
+            return _config.FolderScrollPositions.FirstOrDefault(
+                f => string.Equals(f.FolderPath, folderPath, StringComparison.OrdinalIgnoreCase));
         }
 
         public void SetOpenFilePath(string path)

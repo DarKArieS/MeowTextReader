@@ -6,6 +6,7 @@ using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Media;
 using Microsoft.UI.Xaml.Media.Animation;
 using Microsoft.UI.Xaml.Input;
+using Microsoft.UI.Xaml.Navigation;
 using Windows.Foundation;
 using Windows.System;
 
@@ -200,10 +201,21 @@ namespace MeowTextReader.ReaderPage
 
         private void SaveCurrentPosition()
         {
-            if (_isRestoring) return;
+            // 頁面不在視覺樹上時量不到容器座標，行內比例會被算成 0，所以這種狀態下不存。
+            if (_isRestoring || !IsLoaded) return;
             if (GetFirstVisibleIndex() is not int lineIndex) return;
 
             ViewModel.SaveReadingPosition(lineIndex, GetLineFraction(lineIndex));
+        }
+
+        /// <summary>
+        /// 離開頁面前立即寫入，否則最後一次捲動若落在 debounce 視窗內就會遺失。
+        /// 必須在這裡做而不是 Unloaded：Unloaded 時頁面已脫離視覺樹。
+        /// </summary>
+        protected override void OnNavigatingFrom(NavigatingCancelEventArgs e)
+        {
+            SaveCurrentPosition();
+            base.OnNavigatingFrom(e);
         }
 
         private void ReaderPage_Unloaded(object sender, RoutedEventArgs e)
@@ -213,9 +225,6 @@ namespace MeowTextReader.ReaderPage
 
             _debounceTimer?.Dispose();
             _debounceTimer = null;
-
-            // 立即寫入，否則最後一次捲動若落在 debounce 視窗內就會遺失。
-            SaveCurrentPosition();
 
             KeyDown -= ReaderTextListView_KeyDown;
             ReaderTextListView.Loaded -= ReaderTextListView_Loaded;
