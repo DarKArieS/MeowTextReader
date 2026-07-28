@@ -5,11 +5,13 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:local="using:MeowTextReader.MainPage"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:reader="using:MeowTextReader.ReaderPage"
     mc:Ignorable="d">
 
     <Page.Resources>
         <local:FolderBoldConverter x:Key="FolderBoldConverter" />
         <local:InverseBooleanToVisibilityConverter x:Key="InverseBooleanToVisibilityConverter" />
+        <reader:BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
     </Page.Resources>
 
     <Grid x:Name="RootGrid" Margin="8">
@@ -50,10 +52,56 @@
                             Padding="4,8"
                             BorderBrush="Gray"
                             BorderThickness="0,0,0,1">
-                            <TextBlock
-                                FontSize="20"
-                                FontWeight="{Binding IsFolder, Converter={StaticResource FolderBoldConverter}}"
-                                Text="{Binding Name}" />
+                            <Grid ColumnSpacing="8">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="24" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <!--  只有資料夾有圖示，欄寬固定讓檔名與資料夾名切齊  -->
+                                <FontIcon
+                                    Grid.Column="0"
+                                    HorizontalAlignment="Center"
+                                    VerticalAlignment="Center"
+                                    FontSize="18"
+                                    Glyph="&#xE8B7;"
+                                    Visibility="{Binding IsFolder, Converter={StaticResource BooleanToVisibilityConverter}}" />
+                                <TextBlock
+                                    Grid.Column="1"
+                                    VerticalAlignment="Center"
+                                    FontSize="20"
+                                    FontWeight="{Binding IsFolder, Converter={StaticResource FolderBoldConverter}}"
+                                    Text="{Binding Name}" />
+                                <!--  有閱讀紀錄的檔案才顯示進度環  -->
+                                <StackPanel
+                                    Grid.Column="2"
+                                    VerticalAlignment="Center"
+                                    Orientation="Horizontal"
+                                    Spacing="6"
+                                    ToolTipService.ToolTip="{Binding ProgressText}"
+                                    Visibility="{Binding HasProgress, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                    <TextBlock
+                                        VerticalAlignment="Center"
+                                        FontSize="13"
+                                        Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                        Text="{Binding ProgressLabel}" />
+                                    <Grid Width="28" Height="28" VerticalAlignment="Center">
+                                        <!--  ProgressRing 只畫已完成的弧線，底環要自己補才看得出是個圓  -->
+                                        <Ellipse
+                                            Margin="1.5"
+                                            Stroke="{ThemeResource ControlStrongStrokeColorDisabledBrush}"
+                                            StrokeThickness="3" />
+                                        <ProgressRing
+                                            Width="28"
+                                            Height="28"
+                                            IsActive="True"
+                                            IsIndeterminate="False"
+                                            Maximum="100"
+                                            Minimum="0"
+                                            Value="{Binding ProgressPercent}" />
+                                    </Grid>
+                                </StackPanel>
+                            </Grid>
                             <Border.ContextFlyout>
                                 <MenuFlyout>
                                     <MenuFlyoutItem

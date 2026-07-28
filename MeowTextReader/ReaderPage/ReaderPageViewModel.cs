@@ -127,13 +127,13 @@ namespace MeowTextReader.ReaderPage
         }
 
         /// <summary>
-        /// 以行索引 + 行內比例記錄閱讀位置。
+        /// 以行索引 + 行內比例記錄閱讀位置，同時記下已讀行數供 MainPage 顯示進度。
         /// </summary>
-        public void SaveReadingPosition(int lineIndex, double lineFraction)
+        public void SaveReadingPosition(int lineIndex, double lineFraction, int readLines)
         {
             if (!string.IsNullOrEmpty(FileName))
             {
-                MainRepo.Instance.UpdateHistory(FileName, lineIndex, lineFraction);
+                MainRepo.Instance.UpdateHistory(FileName, lineIndex, lineFraction, readLines, FileLines.Count);
             }
         }
 

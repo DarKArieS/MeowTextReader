@@ -205,7 +205,9 @@ namespace MeowTextReader.ReaderPage
             if (_isRestoring || !IsLoaded) return;
             if (GetFirstVisibleIndex() is not int lineIndex) return;
 
-            ViewModel.SaveReadingPosition(lineIndex, GetLineFraction(lineIndex));
+            // 已讀行數以最下方可見行為準，與標題上顯示的百分比一致。
+            int readLines = (GetLastVisibleIndex() ?? lineIndex) + 1;
+            ViewModel.SaveReadingPosition(lineIndex, GetLineFraction(lineIndex), readLines);
         }
 
         /// <summary>

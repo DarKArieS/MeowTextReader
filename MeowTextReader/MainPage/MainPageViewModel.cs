@@ -1,24 +1,73 @@
 ﻿using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using System.Windows.Input;
 
 namespace MeowTextReader.MainPage
 {
-    public class FileItem
+    public class FileItem : INotifyPropertyChanged
     {
+        private double _progressPercent;
+        private bool _hasProgress;
+
         public string Name { get; set; } = string.Empty;
         public bool IsFolder { get; set; }
         public string FullPath { get; set; } = string.Empty; // 新增完整路徑屬性
+
+        /// <summary>閱讀進度百分比（0~100）。</summary>
+        public double ProgressPercent
+        {
+            get => _progressPercent;
+            private set
+            {
+                if (_progressPercent.Equals(value)) return;
+                _progressPercent = value;
+                OnPropertyChanged();
+                OnPropertyChanged(nameof(ProgressLabel));
+                OnPropertyChanged(nameof(ProgressText));
+            }
+        }
+
+        /// <summary>有閱讀紀錄才顯示進度環。</summary>
+        public bool HasProgress
+        {
+            get => _hasProgress;
+            private set
+            {
+                if (_hasProgress == value) return;
+                _hasProgress = value;
+                OnPropertyChanged();
+            }
+        }
+
+        /// <summary>進度環旁的簡短標示。</summary>
+        public string ProgressLabel => $"{ProgressPercent:0}%";
+
+        /// <summary>滑鼠停留時顯示的完整進度。</summary>
+        public string ProgressText => $"閱讀進度 {ProgressPercent:0.00}%";
+
+        public void SetProgress(double percent)
+        {
+            ProgressPercent = Math.Clamp(percent, 0, 100);
+            HasProgress = true;
+        }
 
         /// <summary>
         /// ListViewItem 的自動化名稱會回退到 ToString()，這裡回傳檔名，
         /// 避免朗讀程式讀出型別名稱。
         /// </summary>
         public override string ToString() => Name;
+
+        public event PropertyChangedEventHandler? PropertyChanged;
+        private void OnPropertyChanged([CallerMemberName] string? name = null)
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
+        }
     }
 
     public class MainPageViewModel : INotifyPropertyChanged
@@ -162,7 +211,74 @@ namespace MeowTextReader.MainPage
                 foreach (var item in dirs.Concat(txts))
                     FolderItems.Add(item);
             }
+
+            ApplyReadingProgress();
         }
+
+        /// <summary>
+        /// 依閱讀紀錄標上進度。舊紀錄沒有總行數，只能實際數過檔案才算得出來，
+        /// 這部分丟到背景做，之後補寫回設定檔，下次進來就走快路徑。
+        /// </summary>
+        private void ApplyReadingProgress()
+        {
+            var pending = new List<FileItem>();
+
+            foreach (var item in FolderItems)
+            {
+                if (item.IsFolder) continue;
+
+                var history = MainRepo.Instance.GetHistoryItem(HistoryKey(item));
+                if (history == null) continue;
+
+                if (history.ProgressPercent is double percent)
+                    item.SetProgress(percent);
+                else if (history.LineIndex.HasValue)
+                    pending.Add(item);
+            }
+
+            if (pending.Count > 0)
+                _ = CountLinesAndApplyProgressAsync(pending, ++_loadGeneration);
+        }
+
+        private int _loadGeneration;
+
+        private async Task CountLinesAndApplyProgressAsync(List<FileItem> pending, int generation)
+        {
+            foreach (var item in pending)
+            {
+                string path = item.FullPath;
+                int totalLines = await Task.Run(() => CountLines(path));
+
+                // 期間切換過資料夾的話這些項目已經不在畫面上了。
+                if (generation != _loadGeneration) return;
+                if (totalLines <= 0) continue;
+
+                string key = HistoryKey(item);
+                var history = MainRepo.Instance.GetHistoryItem(key);
+                if (history?.LineIndex is not int lineIndex) continue;
+
+                int readLines = Math.Clamp(lineIndex + 1, 1, totalLines);
+                MainRepo.Instance.BackfillHistoryLineCounts(key, readLines, totalLines);
+                item.SetProgress((double)readLines / totalLines * 100.0);
+            }
+        }
+
+        private static int CountLines(string path)
+        {
+            try
+            {
+                int count = 0;
+                foreach (var _ in File.ReadLines(path)) count++;
+                return count;
+            }
+            catch
+            {
+                return 0;
+            }
+        }
+
+        /// <summary>閱讀紀錄是以不含副檔名的檔名為 key（見 ReaderPageViewModel）。</summary>
+        private static string HistoryKey(FileItem item) => Path.GetFileNameWithoutExtension(item.FullPath);
 
         private static bool HasAccess(string path)
         {

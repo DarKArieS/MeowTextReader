@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -68,6 +69,33 @@ namespace MeowTextReader
             /// 在 LineIndex 該行內的細部偏移比例，範圍 [0, 1)。
             /// </summary>
             public double LineFraction { get; set; }
+
+            /// <summary>
+            /// 已讀到的行數（最下方可見行 +1），與 ReaderPage 標題上的百分比同義。
+            /// 0 表示舊紀錄還沒有這項資訊。
+            /// </summary>
+            public int ReadLines { get; set; }
+
+            /// <summary>
+            /// 檔案總行數。0 表示舊紀錄還沒有這項資訊。
+            /// </summary>
+            public int TotalLines { get; set; }
+
+            /// <summary>
+            /// 閱讀進度百分比（0~100）。資訊不足時回傳 null。
+            /// </summary>
+            [JsonIgnore]
+            public double? ProgressPercent
+            {
+                get
+                {
+                    if (TotalLines <= 0) return null;
+                    // 舊紀錄只有 LineIndex，退而用「最上方可見行」當作已讀行數。
+                    int readLines = ReadLines > 0 ? ReadLines : (LineIndex + 1 ?? 0);
+                    if (readLines <= 0) return null;
+                    return Math.Clamp((double)readLines / TotalLines * 100.0, 0, 100);
+                }
+            }
         }
 
         /// <summary>
@@ -214,8 +242,9 @@ namespace MeowTextReader
 
         /// <summary>
         /// 記錄閱讀位置。以行索引為錨點，不再儲存像素偏移量。
+        /// readLines/totalLines 只用來算閱讀進度，不影響位置還原。
         /// </summary>
-        public void UpdateHistory(string fileName, int lineIndex, double lineFraction)
+        public void UpdateHistory(string fileName, int lineIndex, double lineFraction, int readLines, int totalLines)
         {
             var item = _config.history.FirstOrDefault(h => h.FileName == fileName);
             if (item == null)
@@ -223,14 +252,34 @@ namespace MeowTextReader
                 item = new HistoryItem { FileName = fileName };
                 _config.history.Add(item);
             }
-            else if (item.LineIndex == lineIndex && Math.Abs(item.LineFraction - lineFraction) < 0.01)
+            else if (item.LineIndex == lineIndex && Math.Abs(item.LineFraction - lineFraction) < 0.01
+                     && item.ReadLines == readLines && item.TotalLines == totalLines)
             {
                 return; // 位置沒有實質變化，不需要重寫設定檔
             }
 
             item.LineIndex = lineIndex;
             item.LineFraction = lineFraction;
+            item.ReadLines = readLines;
+            item.TotalLines = totalLines;
             item.ScrollOffset = 0; // 舊欄位已遷移完成
+            SaveConfig();
+        }
+
+        /// <summary>
+        /// 舊紀錄沒有行數資訊，由 MainPage 實際數過檔案後補寫回來，
+        /// 之後就不必每次進資料夾都重數一次。
+        /// </summary>
+        public void BackfillHistoryLineCounts(string fileName, int readLines, int totalLines)
+        {
+            if (totalLines <= 0) return;
+
+            var item = _config.history.FirstOrDefault(h => h.FileName == fileName);
+            if (item == null) return;
+            if (item.ReadLines == readLines && item.TotalLines == totalLines) return;
+
+            item.ReadLines = readLines;
+            item.TotalLines = totalLines;
             SaveConfig();
         }
 
