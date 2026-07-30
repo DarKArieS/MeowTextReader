@@ -32,16 +32,22 @@
                     Click="SelectFolder_Click"
                     Content="選擇資料夾" />
             </StackPanel>
-            <TextBlock Margin="4,0,0,0" FontSize="16" Text="{Binding FolderPath, Mode=OneWay}" />
+            <TextBlock
+                Margin="4,0,0,0"
+                FontSize="16"
+                Text="{Binding FolderPath, Mode=OneWay}"
+                TextWrapping="Wrap" />
         </StackPanel>
         <ScrollViewer
             x:Name="FolderScrollViewer"
             Grid.Row="1"
             Margin="0,10,0,0"
-            HorizontalScrollBarVisibility="Visible"
+            HorizontalScrollBarVisibility="Disabled"
             VerticalScrollBarVisibility="Visible">
             <ListView
                 x:Name="FolderListView"
+                HorizontalAlignment="Stretch"
+                HorizontalContentAlignment="Stretch"
                 IsItemClickEnabled="True"
                 ItemClick="FolderListView_ItemClick"
                 ItemsSource="{Binding FolderItems}">
@@ -71,7 +77,8 @@
                                     VerticalAlignment="Center"
                                     FontSize="20"
                                     FontWeight="{Binding IsFolder, Converter={StaticResource FolderBoldConverter}}"
-                                    Text="{Binding Name}" />
+                                    Text="{Binding Name}"
+                                    TextWrapping="Wrap" />
                                 <!--  有閱讀紀錄的檔案才顯示進度環  -->
                                 <StackPanel
                                     Grid.Column="2"
