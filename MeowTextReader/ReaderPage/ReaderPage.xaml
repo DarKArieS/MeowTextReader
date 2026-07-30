@@ -11,6 +11,8 @@
     <Page.Resources>
         <local:BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
         <main:InverseBooleanToVisibilityConverter x:Key="InverseBooleanToVisibilityConverter" />
+        <local:BooleanToFontWeightConverter x:Key="BooleanToFontWeightConverter" />
+        <local:BooleanToAccentBrushConverter x:Key="BooleanToAccentBrushConverter" />
         <Storyboard x:Key="SlideOutBottomPanel">
             <DoubleAnimation
                 Storyboard.TargetName="BottomPanel"
@@ -187,16 +189,19 @@
                                                         <ColumnDefinition Width="*" />
                                                         <ColumnDefinition Width="Auto" />
                                                     </Grid.ColumnDefinitions>
-                                                    <!--  寬度貼合內容，只有超過上限的長標題才會換行  -->
+                                                    <!--  寬度貼合內容，只有超過上限的長標題才會換行；正在讀的章節用強調色+粗體標示  -->
                                                     <TextBlock
                                                         Grid.Column="0"
+                                                        FontWeight="{Binding IsCurrent, Converter={StaticResource BooleanToFontWeightConverter}}"
+                                                        Foreground="{Binding IsCurrent, Converter={StaticResource BooleanToAccentBrushConverter}}"
                                                         Text="{Binding Title}"
                                                         TextWrapping="Wrap" />
                                                     <TextBlock
                                                         Grid.Column="1"
                                                         VerticalAlignment="Top"
                                                         FontSize="12"
-                                                        Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                                        FontWeight="{Binding IsCurrent, Converter={StaticResource BooleanToFontWeightConverter}}"
+                                                        Foreground="{Binding IsCurrent, Converter={StaticResource BooleanToAccentBrushConverter}}"
                                                         Text="{Binding LineNumber}" />
                                                 </Grid>
                                             </DataTemplate>

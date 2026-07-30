@@ -22,6 +22,7 @@ namespace MeowTextReader.ReaderPage
         private Brush? _foregroundBrush;
         private bool _chaptersLoaded;
         private bool _hasChapters;
+        private int _currentChapterIndex = -1;
         public ObservableCollection<LineItem> FileLines { get; } = new();
 
         /// <summary>目前檔案掃描出來的章節。第一次打開章節清單時才載入。</summary>
@@ -166,6 +167,7 @@ namespace MeowTextReader.ReaderPage
         {
             _chaptersLoaded = true;
             Chapters.Clear();
+            _currentChapterIndex = -1;
 
             if (string.IsNullOrEmpty(FileName))
             {
@@ -208,6 +210,27 @@ namespace MeowTextReader.ReaderPage
             }
             return result;
         }
+
+        /// <summary>
+        /// 依目前閱讀到的行數，重新計算並標記正在讀的章節（<see cref="ChapterItem.IsCurrent"/>）。
+        /// 每次打開或重新整理章節清單時呼叫，結果供畫面高亮與自動捲動使用。
+        /// </summary>
+        public void UpdateCurrentChapter(int lineIndex)
+        {
+            int index = FindChapterIndexForLine(lineIndex);
+            if (index == _currentChapterIndex) return;
+
+            if (_currentChapterIndex >= 0 && _currentChapterIndex < Chapters.Count)
+                Chapters[_currentChapterIndex].IsCurrent = false;
+
+            _currentChapterIndex = index;
+
+            if (_currentChapterIndex >= 0 && _currentChapterIndex < Chapters.Count)
+                Chapters[_currentChapterIndex].IsCurrent = true;
+        }
+
+        /// <summary>目前正在讀的章節在清單中的位置，需先呼叫 <see cref="UpdateCurrentChapter"/>。</summary>
+        public int CurrentChapterIndex => _currentChapterIndex;
 
         /// <summary>
         /// 以行索引 + 行內比例記錄閱讀位置，同時記下已讀行數供 MainPage 顯示進度。

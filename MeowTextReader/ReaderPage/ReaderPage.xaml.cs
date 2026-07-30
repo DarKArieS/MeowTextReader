@@ -347,13 +347,15 @@ namespace MeowTextReader.ReaderPage
         }
 
         /// <summary>
-        /// 打開清單時直接停在正在讀的章節，長篇文章才不必自己捲半天。
+        /// 打開清單時標記並停在正在讀的章節：高亮讓人一眼看出目前位置，
+        /// 長篇文章也不必自己捲半天找。
         /// </summary>
         private void ScrollChapterListToCurrent()
         {
             if (!ViewModel.HasChapters) return;
 
-            int index = ViewModel.FindChapterIndexForLine(GetFirstVisibleIndex() ?? 0);
+            ViewModel.UpdateCurrentChapter(GetFirstVisibleIndex() ?? 0);
+            int index = ViewModel.CurrentChapterIndex;
             if (index < 0) return;
 
             // 清單這時才剛產生容器，要等版面配置完成才捲得動。

@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.Encodings.Web;
 using System.Text.Json;
@@ -379,8 +381,52 @@ namespace MeowTextReader.Repo
                 }
                 catch
                 {
-                    _config = new AppConfig();
+                    HandleCorruptConfig();
                 }
+            }
+        }
+
+        [DllImport("user32.dll", CharSet = CharSet.Unicode)]
+        private static extern int MessageBoxW(IntPtr hWnd, string text, string caption, uint type);
+
+        private const uint MB_YESNO = 0x00000004;
+        private const uint MB_ICONWARNING = 0x00000030;
+        private const int IDYES = 6;
+
+        /// <summary>
+        /// 設定檔壞掉、解析失敗時的處理。這裡發生在 MainRepo 建構子（App 啟動早期），
+        /// 還沒有視窗可以掛 ContentDialog，所以改用原生 MessageBox 同步詢問。
+        /// 選「是」就覆蓋成全新預設值；選「否」則打開設定檔讓使用者自行修正，並直接關閉程式，
+        /// 避免任何一方的資料被覆蓋掉。
+        /// </summary>
+        private void HandleCorruptConfig()
+        {
+            int result = MessageBoxW(
+                IntPtr.Zero,
+                "設定檔讀取失敗，可能已損毀。\n\n選「是」會覆蓋成全新的預設設定；\n選「否」會用編輯器開啟設定檔，並關閉本程式讓你自行修正。",
+                "設定檔錯誤",
+                MB_YESNO | MB_ICONWARNING);
+
+            if (result == IDYES)
+            {
+                _config = new AppConfig();
+                SaveConfig();
+            }
+            else
+            {
+                try
+                {
+                    Process.Start(new ProcessStartInfo
+                    {
+                        FileName = _saveFilePath,
+                        UseShellExecute = true
+                    });
+                }
+                catch
+                {
+                    // 開不了編輯器也沒關係，至少不覆蓋使用者的設定檔。
+                }
+                Environment.Exit(1);
             }
         }
     }
