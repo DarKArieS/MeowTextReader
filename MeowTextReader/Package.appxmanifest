@@ -11,7 +11,7 @@
   <Identity
     Name="MeowTextReader"
     Publisher="CN=Aries"
-    Version="0.0.0.0" />
+    Version="0.0.5.0" />
 
   <mp:PhoneIdentity PhoneProductId="c27bb807-281b-45db-aa5d-369f7724a5ea" PhonePublisherId="00000000-0000-0000-0000-000000000000"/>
 
