@@ -5,9 +5,10 @@ using System.ComponentModel;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Windows.Input;
-using MeowTextReader.MainPage;
+using MeowTextReader.Repo;
+using MeowTextReader.Repo.Chapter;
 
-namespace MeowTextReader.GlobalSetting
+namespace MeowTextReader.MainPage.GlobalSetting
 {
     /// <summary>
     /// 清單上的一列 Regex。用物件而非裸字串，TextBox 才綁得到 TwoWay，

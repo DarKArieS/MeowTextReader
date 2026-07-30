@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
 
-namespace MeowTextReader
+namespace MeowTextReader.Repo.Chapter
 {
     /// <summary>
     /// 依使用者設定的 ChapterRegex 掃描文章，找出章節標題所在的行。

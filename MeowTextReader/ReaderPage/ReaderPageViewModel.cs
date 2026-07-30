@@ -5,8 +5,11 @@ using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
-using Microsoft.UI.Xaml.Media;
+using MeowTextReader.Repo;
+using MeowTextReader.Repo.Chapter;
+using MeowTextReader.Repo.Model;
 using Microsoft.UI;
+using Microsoft.UI.Xaml.Media;
 
 namespace MeowTextReader.ReaderPage
 {
@@ -217,7 +220,7 @@ namespace MeowTextReader.ReaderPage
             }
         }
 
-        public MainRepo.HistoryItem? GetSavedPosition()
+        public HistoryItem? GetSavedPosition()
         {
             if (!string.IsNullOrEmpty(FileName))
             {

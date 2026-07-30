@@ -1,12 +1,15 @@
-﻿using System.ComponentModel;
-using System.Runtime.CompilerServices;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using System.Windows.Input;
+using MeowTextReader.Repo;
+using MeowTextReader.Repo.Model;
 
 namespace MeowTextReader.MainPage
 {
@@ -113,7 +116,7 @@ namespace MeowTextReader.MainPage
             MainRepo.Instance.UpdateFolderScrollPosition(folderPath, itemIndex, horizontalOffset);
         }
 
-        public MainRepo.FolderScrollHistoryItem? GetSavedScrollPosition(string? folderPath)
+        public FolderScrollHistoryItem? GetSavedScrollPosition(string? folderPath)
         {
             if (string.IsNullOrEmpty(folderPath)) return null;
             return MainRepo.Instance.GetFolderScrollPosition(folderPath);
@@ -149,7 +152,7 @@ namespace MeowTextReader.MainPage
             if (item == null || item.IsFolder || string.IsNullOrEmpty(item.FullPath)) return;
             try
             {
-                System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+                Process.Start(new ProcessStartInfo
                 {
                     FileName = item.FullPath,
                     UseShellExecute = true
@@ -163,7 +166,7 @@ namespace MeowTextReader.MainPage
             if (item == null || string.IsNullOrEmpty(item.FullPath)) return;
             try
             {
-                System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+                Process.Start(new ProcessStartInfo
                 {
                     FileName = "explorer.exe",
                     Arguments = $"/select,\"{item.FullPath}\"",

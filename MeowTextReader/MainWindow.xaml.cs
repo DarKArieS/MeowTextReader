@@ -1,8 +1,10 @@
 using System;
+using Windows.Graphics;
+using MeowTextReader.Repo;
+using MeowTextReader.Repo.Model;
 using Microsoft.UI.Dispatching;
 using Microsoft.UI.Windowing;
 using Microsoft.UI.Xaml;
-using Windows.Graphics;
 
 namespace MeowTextReader
 {
@@ -36,7 +38,7 @@ namespace MeowTextReader
             var lastPage = MainRepo.Instance.LastPage;
             if (lastPage == AppPage.ReaderPage)
             {
-                MainFrame.Navigate(typeof(MeowTextReader.ReaderPage.ReaderPage));
+                MainFrame.Navigate(typeof(ReaderPage.ReaderPage));
             }
             else
             {

@@ -1,7 +1,7 @@
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 
-namespace MeowTextReader.GlobalSetting
+namespace MeowTextReader.MainPage.GlobalSetting
 {
     /// <summary>
     /// 不綁定單一檔案的全域設定。目前只有章節抓取用的 Regex 清單。

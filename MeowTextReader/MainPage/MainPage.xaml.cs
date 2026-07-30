@@ -1,12 +1,20 @@
 ﻿using System;
 using System.ComponentModel;
+using System.Diagnostics;
+using System.IO;
+using System.Text;
 using System.Threading;
-using Microsoft.UI.Xaml;
-using Microsoft.UI.Xaml.Controls;
-using Microsoft.UI.Xaml.Navigation;
 using Windows.Foundation;
 using Windows.Storage;
 using Windows.Storage.Pickers;
+using MeowTextReader.MainPage.GlobalSetting;
+using MeowTextReader.Repo;
+using MeowTextReader.Repo.Model;
+using Microsoft.UI.Dispatching;
+using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Navigation;
+using WinRT.Interop;
 
 namespace MeowTextReader.MainPage
 {
@@ -124,7 +132,7 @@ namespace MeowTextReader.MainPage
 
             _isRestoring = true;
             // 換資料夾時清單要等 LoadFolderItems 與版面配置完成，容器才產生得出來。
-            DispatcherQueue.TryEnqueue(Microsoft.UI.Dispatching.DispatcherQueuePriority.Low, () =>
+            DispatcherQueue.TryEnqueue(DispatcherQueuePriority.Low, () =>
             {
                 FolderListView.UpdateLayout();
                 if (saved != null)
@@ -163,8 +171,8 @@ namespace MeowTextReader.MainPage
         private async void SelectFolder_Click(object sender, RoutedEventArgs e)
         {
             var picker = new FolderPicker();
-            var hwnd = WinRT.Interop.WindowNative.GetWindowHandle(App.MainWindowInstance);
-            WinRT.Interop.InitializeWithWindow.Initialize(picker, hwnd);
+            var hwnd = WindowNative.GetWindowHandle(App.MainWindowInstance);
+            InitializeWithWindow.Initialize(picker, hwnd);
             picker.FileTypeFilter.Add("*");
             StorageFolder folder = await picker.PickSingleFolderAsync().AsTask();
             if (folder != null)
@@ -180,7 +188,7 @@ namespace MeowTextReader.MainPage
 
         private async void GlobalSetting_Click(object sender, RoutedEventArgs e)
         {
-            var dialog = new GlobalSetting.GlobalSettingDialog { XamlRoot = this.XamlRoot };
+            var dialog = new GlobalSettingDialog { XamlRoot = this.XamlRoot };
             await dialog.ShowAsync();
         }
 
@@ -189,11 +197,11 @@ namespace MeowTextReader.MainPage
             try
             {
                 var path = MainRepo.Instance.SaveFilePath;
-                if (!System.IO.File.Exists(path))
+                if (!File.Exists(path))
                 {
-                    System.IO.File.WriteAllText(path, "{}", new System.Text.UTF8Encoding(encoderShouldEmitUTF8Identifier: false));
+                    File.WriteAllText(path, "{}", new UTF8Encoding(encoderShouldEmitUTF8Identifier: false));
                 }
-                System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+                Process.Start(new ProcessStartInfo
                 {
                     FileName = path,
                     UseShellExecute = true
@@ -213,10 +221,10 @@ namespace MeowTextReader.MainPage
                 else if (fileItem.Name.EndsWith(".txt", StringComparison.OrdinalIgnoreCase))
                 {
                     // 將完整路徑存入 MainRepo appConfig.json
-                    var filePath = System.IO.Path.Combine(ViewModel.FolderPath ?? string.Empty, fileItem.Name);
+                    var filePath = Path.Combine(ViewModel.FolderPath ?? string.Empty, fileItem.Name);
                     MainRepo.Instance.SetOpenFilePath(filePath);
                     // 跳轉到 ReaderPage
-                    Frame.Navigate(typeof(MeowTextReader.ReaderPage.ReaderPage));
+                    Frame.Navigate(typeof(ReaderPage.ReaderPage));
                 }
             }
         }

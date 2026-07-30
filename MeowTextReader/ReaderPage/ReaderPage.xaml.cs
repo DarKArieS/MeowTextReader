@@ -1,14 +1,19 @@
 ﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.UI.Xaml;
-using Microsoft.UI.Xaml.Controls;
-using Microsoft.UI.Xaml.Media;
-using Microsoft.UI.Xaml.Media.Animation;
-using Microsoft.UI.Xaml.Input;
-using Microsoft.UI.Xaml.Navigation;
 using Windows.Foundation;
 using Windows.System;
+using MeowTextReader.Repo;
+using MeowTextReader.Repo.Chapter;
+using MeowTextReader.Repo.Model;
+using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Controls.Primitives;
+using Microsoft.UI.Xaml.Input;
+using Microsoft.UI.Xaml.Media;
+using Microsoft.UI.Xaml.Media.Animation;
+using Microsoft.UI.Xaml.Navigation;
+using DispatcherQueuePriority = Microsoft.UI.Dispatching.DispatcherQueuePriority;
 
 namespace MeowTextReader.ReaderPage
 {
@@ -36,7 +41,7 @@ namespace MeowTextReader.ReaderPage
             this.Loaded += ReaderPage_Loaded;
             this.Unloaded += ReaderPage_Unloaded;
             ReaderTextListView.Loaded += ReaderTextListView_Loaded;
-            MeowTextReader.MainRepo.Instance.LastPage = AppPage.ReaderPage;
+            MainRepo.Instance.LastPage = AppPage.ReaderPage;
         }
 
         private void ReaderPage_Loaded(object sender, RoutedEventArgs e)
@@ -152,7 +157,7 @@ namespace MeowTextReader.ReaderPage
             ReaderTextListView.ScrollIntoView(ViewModel.FileLines[lineIndex], ScrollIntoViewAlignment.Leading);
 
             // 容器要等下一次 layout 才就位，行內微調與解除旗標都得排在其後。
-            DispatcherQueue.TryEnqueue(Microsoft.UI.Dispatching.DispatcherQueuePriority.Low, () =>
+            DispatcherQueue.TryEnqueue(DispatcherQueuePriority.Low, () =>
             {
                 ApplyLineFraction(lineIndex, lineFraction);
                 _isRestoring = false;
@@ -246,7 +251,7 @@ namespace MeowTextReader.ReaderPage
             }, null, DebounceMilliseconds, Timeout.Infinite);
         }
 
-        private void ScrollSlider_ValueChanged(object sender, Microsoft.UI.Xaml.Controls.Primitives.RangeBaseValueChangedEventArgs e)
+        private void ScrollSlider_ValueChanged(object sender, RangeBaseValueChangedEventArgs e)
         {
             if (_isScrollViewerUpdating || ViewModel.FileLines.Count == 0) return;
 
@@ -258,7 +263,7 @@ namespace MeowTextReader.ReaderPage
 
         private void BackButton_Click(object sender, RoutedEventArgs e)
         {
-            Frame.Navigate(typeof(MeowTextReader.MainPage.MainPage));
+            Frame.Navigate(typeof(MainPage.MainPage));
         }
 
         private ScrollViewer? FindScrollViewer(DependencyObject parent)
@@ -352,7 +357,7 @@ namespace MeowTextReader.ReaderPage
             if (index < 0) return;
 
             // 清單這時才剛產生容器，要等版面配置完成才捲得動。
-            DispatcherQueue.TryEnqueue(Microsoft.UI.Dispatching.DispatcherQueuePriority.Low, () =>
+            DispatcherQueue.TryEnqueue(DispatcherQueuePriority.Low, () =>
             {
                 ChapterListView.ScrollIntoView(ViewModel.Chapters[index], ScrollIntoViewAlignment.Leading);
             });
@@ -367,10 +372,10 @@ namespace MeowTextReader.ReaderPage
 
             // ScrollToLine 期間 _isRestoring 為 true，捲動不會被寫回設定檔；
             // 這個 callback 排在它的解旗標之後，跳轉後的位置才存得起來。
-            DispatcherQueue.TryEnqueue(Microsoft.UI.Dispatching.DispatcherQueuePriority.Low, SaveCurrentPosition);
+            DispatcherQueue.TryEnqueue(DispatcherQueuePriority.Low, SaveCurrentPosition);
         }
 
-        private void ReaderTextListView_Tapped(object sender, Microsoft.UI.Xaml.Input.TappedRoutedEventArgs e)
+        private void ReaderTextListView_Tapped(object sender, TappedRoutedEventArgs e)
         {
             ToggleBottomPanel();
             e.Handled = true;

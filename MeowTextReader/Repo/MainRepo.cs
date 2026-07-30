@@ -1,47 +1,17 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text;
+using System.Text.Encodings.Web;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using System.Collections.Generic;
-using System.Linq;
+using Windows.Storage;
+using MeowTextReader.Repo.Chapter;
+using MeowTextReader.Repo.Model;
 
-namespace MeowTextReader
+namespace MeowTextReader.Repo
 {
-    public enum AppPage
-    {
-        MainPage,
-        ReaderPage
-    }
-
-    public class ReaderSetting // 移出 MainRepo class，作為獨立 public class
-    {
-        public double FontSize { get; set; } = 20.0;
-
-        /// <summary>
-        /// 行距倍率，實際行高為 FontSize * LineSpacing。
-        /// </summary>
-        public double LineSpacing { get; set; } = 1.5;
-
-        public string? CustomBackgroundColor { get; set; } = null; // 改名
-        public bool UseCustomBackgroundColor { get; set; } = false; // 新增
-        public string? CustomForegroundColor { get; set; } = null; // 新增
-        public bool UseCustomForegroundColor { get; set; } = false; // 新增
-    }
-
-    /// <summary>
-    /// 視窗上次關閉時的位置與大小（實體像素）。最大化時記錄的是還原後的大小，
-    /// 這樣下次開啟先最大化、使用者按還原時才會回到合理尺寸。
-    /// </summary>
-    public class WindowPlacement
-    {
-        public int X { get; set; }
-        public int Y { get; set; }
-        public int Width { get; set; }
-        public int Height { get; set; }
-        public bool IsMaximized { get; set; }
-    }
-
     public class MainRepo
     {
         private static readonly Lazy<MainRepo> _instance = new(() => new MainRepo());
@@ -49,92 +19,6 @@ namespace MeowTextReader
 
         private readonly string _saveFilePath;
         private AppConfig _config = new();
-        private AppPage? _lastPageCache = null;
-
-        public class HistoryItem
-        {
-            public string? FileName { get; set; }
-
-            /// <summary>
-            /// 舊版欄位：像素捲動偏移量。僅供一次性資料遷移，新程式不再寫入。
-            /// </summary>
-            public int ScrollOffset { get; set; }
-
-            /// <summary>
-            /// 最上方可見行的索引（0-based）。這是位置的絕對錨點，不受字體大小、
-            /// 視窗尺寸或虛擬化估算誤差影響。
-            /// </summary>
-            public int? LineIndex { get; set; }
-
-            /// <summary>
-            /// 在 LineIndex 該行內的細部偏移比例，範圍 [0, 1)。
-            /// </summary>
-            public double LineFraction { get; set; }
-
-            /// <summary>
-            /// 已讀到的行數（最下方可見行 +1），與 ReaderPage 標題上的百分比同義。
-            /// 0 表示舊紀錄還沒有這項資訊。
-            /// </summary>
-            public int ReadLines { get; set; }
-
-            /// <summary>
-            /// 檔案總行數。0 表示舊紀錄還沒有這項資訊。
-            /// </summary>
-            public int TotalLines { get; set; }
-
-            /// <summary>
-            /// 上次掃描出來的章節清單。掃描結果存在這裡，下次開同一個檔案就不必重掃。
-            /// </summary>
-            public List<ChapterItem>? Chapters { get; set; }
-
-            /// <summary>
-            /// <see cref="Chapters"/> 是用什麼條件掃出來的（見 <see cref="BuildChapterCacheKey"/>）。
-            /// 條件對不上就代表快取過期，必須重掃。
-            /// </summary>
-            public string? ChapterCacheKey { get; set; }
-
-            /// <summary>
-            /// 閱讀進度百分比（0~100）。資訊不足時回傳 null。
-            /// </summary>
-            [JsonIgnore]
-            public double? ProgressPercent
-            {
-                get
-                {
-                    if (TotalLines <= 0) return null;
-                    // 舊紀錄只有 LineIndex，退而用「最上方可見行」當作已讀行數。
-                    int readLines = ReadLines > 0 ? ReadLines : (LineIndex + 1 ?? 0);
-                    if (readLines <= 0) return null;
-                    return Math.Clamp((double)readLines / TotalLines * 100.0, 0, 100);
-                }
-            }
-        }
-
-        /// <summary>
-        /// MainPage 各資料夾的瀏覽位置。以項目索引為錨點，理由同 <see cref="HistoryItem.LineIndex"/>。
-        /// </summary>
-        public class FolderScrollHistoryItem
-        {
-            public string? FolderPath { get; set; }
-
-            /// <summary>最上方可見項目的索引（0-based）。</summary>
-            public int ItemIndex { get; set; }
-
-            public double HorizontalOffset { get; set; }
-        }
-
-        private class AppConfig
-        {
-            public string? folderPath { get; set; }
-            public string? OpenFilePath { get; set; }
-            public string? LastPage { get; set; } // serialized as string
-            public ReaderSetting ReaderSetting { get; set; } = new ReaderSetting();
-            public List<string>? ChapterRegexList { get; set; }
-            public int? ChapterTitleMaxLength { get; set; }
-            public List<HistoryItem> history { get; set; } = new();
-            public List<FolderScrollHistoryItem> FolderScrollPositions { get; set; } = new();
-            public WindowPlacement? WindowPlacement { get; set; }
-        }
 
         private MainRepo()
         {
@@ -153,7 +37,7 @@ namespace MeowTextReader
             string folder;
             try
             {
-                folder = Windows.Storage.ApplicationData.Current.LocalFolder.Path;
+                folder = ApplicationData.Current.LocalFolder.Path;
             }
             catch
             {
@@ -170,12 +54,12 @@ namespace MeowTextReader
 
         public string? FolderPath
         {
-            get => _config.folderPath;
+            get => _config.FolderPath;
             set
             {
-                if (_config.folderPath != value)
+                if (_config.FolderPath != value)
                 {
-                    _config.folderPath = value;
+                    _config.FolderPath = value;
                     SaveConfig();
                 }
             }
@@ -196,22 +80,12 @@ namespace MeowTextReader
 
         public AppPage LastPage
         {
-            get
-            {
-                if (_lastPageCache.HasValue) return _lastPageCache.Value;
-                if (Enum.TryParse<AppPage>(_config.LastPage, out var page))
-                {
-                    _lastPageCache = page;
-                    return page;
-                }
-                return AppPage.MainPage;
-            }
+            get => _config.LastPage ?? AppPage.MainPage;
             set
             {
                 if (LastPage != value)
                 {
-                    _config.LastPage = value.ToString();
-                    _lastPageCache = value;
+                    _config.LastPage = value;
                     SaveConfig();
                 }
             }
@@ -336,11 +210,11 @@ namespace MeowTextReader
         {
             if (string.IsNullOrEmpty(fileName)) return;
 
-            var item = _config.history.FirstOrDefault(h => h.FileName == fileName);
+            var item = _config.History.FirstOrDefault(h => h.FileName == fileName);
             if (item == null)
             {
                 item = new HistoryItem { FileName = fileName };
-                _config.history.Add(item);
+                _config.History.Add(item);
             }
 
             item.Chapters = chapters;
@@ -348,7 +222,7 @@ namespace MeowTextReader
             SaveConfig();
         }
 
-        public List<HistoryItem> History => _config.history;
+        public List<HistoryItem> History => _config.History;
 
         /// <summary>
         /// 記錄閱讀位置。以行索引為錨點，不再儲存像素偏移量。
@@ -356,11 +230,11 @@ namespace MeowTextReader
         /// </summary>
         public void UpdateHistory(string fileName, int lineIndex, double lineFraction, int readLines, int totalLines)
         {
-            var item = _config.history.FirstOrDefault(h => h.FileName == fileName);
+            var item = _config.History.FirstOrDefault(h => h.FileName == fileName);
             if (item == null)
             {
                 item = new HistoryItem { FileName = fileName };
-                _config.history.Add(item);
+                _config.History.Add(item);
             }
             else if (item.LineIndex == lineIndex && Math.Abs(item.LineFraction - lineFraction) < 0.01
                      && item.ReadLines == readLines && item.TotalLines == totalLines)
@@ -384,7 +258,7 @@ namespace MeowTextReader
         {
             if (totalLines <= 0) return;
 
-            var item = _config.history.FirstOrDefault(h => h.FileName == fileName);
+            var item = _config.History.FirstOrDefault(h => h.FileName == fileName);
             if (item == null) return;
             if (item.ReadLines == readLines && item.TotalLines == totalLines) return;
 
@@ -395,7 +269,7 @@ namespace MeowTextReader
 
         public HistoryItem? GetHistoryItem(string fileName)
         {
-            return _config.history.FirstOrDefault(h => h.FileName == fileName);
+            return _config.History.FirstOrDefault(h => h.FileName == fileName);
         }
 
         /// <summary>
@@ -483,7 +357,9 @@ namespace MeowTextReader
             WriteIndented = true,
             // 預設編碼器會將非 ASCII 字元（例如中文）跳脫成 \uXXXX，
             // 這裡改用 UnsafeRelaxedJsonEscaping 讓設定檔顯示真實字元，方便使用者用編輯器檢視/編輯。
-            Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping
+            Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
+            // LastPage 用列舉名稱（例如 "MainPage"）存檔，方便使用者直接看懂/編輯設定檔。
+            Converters = { new JsonStringEnumConverter() }
         };
 
         private void SaveConfig()
@@ -499,7 +375,7 @@ namespace MeowTextReader
                 try
                 {
                     var json = File.ReadAllText(_saveFilePath, Utf8NoBom);
-                    _config = JsonSerializer.Deserialize<AppConfig>(json) ?? new AppConfig();
+                    _config = JsonSerializer.Deserialize<AppConfig>(json, SaveJsonOptions) ?? new AppConfig();
                 }
                 catch
                 {

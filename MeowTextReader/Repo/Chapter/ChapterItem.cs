@@ -1,6 +1,6 @@
 using System.Text.Json.Serialization;
 
-namespace MeowTextReader
+namespace MeowTextReader.Repo.Chapter
 {
     /// <summary>
     /// 由 ChapterRegex 掃描出來的一個章節位置。會序列化進 appConfig.json 的閱讀紀錄，
