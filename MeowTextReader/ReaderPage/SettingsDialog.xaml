@@ -13,6 +13,11 @@
         Margin="20"
         HorizontalAlignment="Left"
         Orientation="Vertical">
+        <TextBlock
+            Margin="0,0,0,16"
+            FontSize="18"
+            FontWeight="SemiBold"
+            Text="設定" />
         <TextBlock Margin="0,0,0,8" Text="文字大小" />
         <StackPanel Orientation="Horizontal">
             <Button Click="DecreaseFontSize_Click" Content="-" />

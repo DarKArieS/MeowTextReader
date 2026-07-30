@@ -139,7 +139,6 @@
 
         <TeachingTip
             x:Name="SettingsTeachingTip"
-            Title="設定"
             IsLightDismissEnabled="True"
             PreferredPlacement="Top"
             Target="{x:Bind SettingsButton}">
