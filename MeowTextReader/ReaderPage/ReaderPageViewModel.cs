@@ -1,7 +1,9 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.IO;
+using System.Linq;
 using System.Runtime.CompilerServices;
 using Microsoft.UI.Xaml.Media;
 using Microsoft.UI;
@@ -15,7 +17,24 @@ namespace MeowTextReader.ReaderPage
         private double _lineSpacing;
         private Brush? _backgroundBrush;
         private Brush? _foregroundBrush;
+        private bool _chaptersLoaded;
+        private bool _hasChapters;
         public ObservableCollection<LineItem> FileLines { get; } = new();
+
+        /// <summary>目前檔案掃描出來的章節。第一次打開章節清單時才載入。</summary>
+        public ObservableCollection<ChapterItem> Chapters { get; } = new();
+
+        /// <summary>沒有章節時要改顯示提示文字，而不是一片空白的清單。</summary>
+        public bool HasChapters
+        {
+            get => _hasChapters;
+            private set
+            {
+                if (_hasChapters == value) return;
+                _hasChapters = value;
+                OnPropertyChanged();
+            }
+        }
 
         public string? FileName
         {
@@ -124,6 +143,67 @@ namespace MeowTextReader.ReaderPage
                 for (int i = 0; i < lines.Length; i++)
                     FileLines.Add(new LineItem(i, lines[i]));
             }
+        }
+
+        /// <summary>
+        /// 第一次打開章節清單時才掃描。開檔時就掃會讓大檔案的開啟變慢，
+        /// 而多數時候使用者根本不會打開章節清單。
+        /// </summary>
+        public void EnsureChaptersLoaded()
+        {
+            if (_chaptersLoaded) return;
+            LoadChapters(forceRefresh: false);
+        }
+
+        /// <summary>
+        /// 載入章節。有沿用得上的快取就直接用，否則重新掃描並寫回閱讀紀錄，
+        /// 下次開同一個檔案就不必再掃。
+        /// </summary>
+        public void LoadChapters(bool forceRefresh)
+        {
+            _chaptersLoaded = true;
+            Chapters.Clear();
+
+            if (string.IsNullOrEmpty(FileName))
+            {
+                HasChapters = false;
+                return;
+            }
+
+            var patterns = MainRepo.Instance.ChapterRegexList;
+            var titleMaxLength = MainRepo.Instance.ChapterTitleMaxLength;
+            var cacheKey = MainRepo.BuildChapterCacheKey(patterns, titleMaxLength, FileLines.Count);
+            var history = MainRepo.Instance.GetHistoryItem(FileName);
+
+            List<ChapterItem>? chapters = null;
+            if (!forceRefresh && history?.Chapters != null && history.ChapterCacheKey == cacheKey)
+                chapters = history.Chapters;
+
+            if (chapters == null)
+            {
+                chapters = ChapterParser.Parse(
+                    FileLines.Select(l => l.Text).ToList(), patterns, titleMaxLength);
+                MainRepo.Instance.UpdateChapters(FileName, chapters, cacheKey);
+            }
+
+            foreach (var chapter in chapters)
+                Chapters.Add(chapter);
+
+            HasChapters = Chapters.Count > 0;
+        }
+
+        /// <summary>
+        /// 指定行所屬的章節在清單中的位置（該行之前最近的一個章節）。找不到時回傳 -1。
+        /// </summary>
+        public int FindChapterIndexForLine(int lineIndex)
+        {
+            int result = -1;
+            for (int i = 0; i < Chapters.Count; i++)
+            {
+                if (Chapters[i].LineIndex > lineIndex) break;
+                result = i;
+            }
+            return result;
         }
 
         /// <summary>

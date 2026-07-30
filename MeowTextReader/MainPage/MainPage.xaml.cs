@@ -178,6 +178,12 @@ namespace MeowTextReader.MainPage
             ViewModel.BackCommand.Execute(null);
         }
 
+        private async void GlobalSetting_Click(object sender, RoutedEventArgs e)
+        {
+            var dialog = new GlobalSetting.GlobalSettingDialog { XamlRoot = this.XamlRoot };
+            await dialog.ShowAsync();
+        }
+
         private void RawConfig_Click(object sender, RoutedEventArgs e)
         {
             try

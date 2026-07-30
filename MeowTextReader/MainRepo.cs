@@ -83,6 +83,17 @@ namespace MeowTextReader
             public int TotalLines { get; set; }
 
             /// <summary>
+            /// 上次掃描出來的章節清單。掃描結果存在這裡，下次開同一個檔案就不必重掃。
+            /// </summary>
+            public List<ChapterItem>? Chapters { get; set; }
+
+            /// <summary>
+            /// <see cref="Chapters"/> 是用什麼條件掃出來的（見 <see cref="BuildChapterCacheKey"/>）。
+            /// 條件對不上就代表快取過期，必須重掃。
+            /// </summary>
+            public string? ChapterCacheKey { get; set; }
+
+            /// <summary>
             /// 閱讀進度百分比（0~100）。資訊不足時回傳 null。
             /// </summary>
             [JsonIgnore]
@@ -118,6 +129,8 @@ namespace MeowTextReader
             public string? OpenFilePath { get; set; }
             public string? LastPage { get; set; } // serialized as string
             public ReaderSetting ReaderSetting { get; set; } = new ReaderSetting();
+            public List<string>? ChapterRegexList { get; set; }
+            public int? ChapterTitleMaxLength { get; set; }
             public List<HistoryItem> history { get; set; } = new();
             public List<FolderScrollHistoryItem> FolderScrollPositions { get; set; } = new();
             public WindowPlacement? WindowPlacement { get; set; }
@@ -255,6 +268,85 @@ namespace MeowTextReader
         }
 
         public static event Action? ReaderSettingChanged;
+
+        /// <summary>使用者沒設定過時採用的章節 Regex。</summary>
+        public static readonly IReadOnlyList<string> DefaultChapterRegexList = new[]
+        {
+            "第([0-9一二三四五六七八九十]+)話",
+            "第([0-9一二三四五六七八九十]+)章"
+        };
+
+        /// <summary>
+        /// 章節抓取用的 Regex 清單。設定檔沒有這個欄位時（舊設定檔）給預設值；
+        /// 使用者刻意清空則尊重其設定，不再塞回預設值。
+        /// </summary>
+        public List<string> ChapterRegexList
+        {
+            get => _config.ChapterRegexList ??= new List<string>(DefaultChapterRegexList);
+            set
+            {
+                _config.ChapterRegexList = value ?? new List<string>();
+                SaveConfig();
+            }
+        }
+
+        public const int MinChapterTitleLength = 8;
+        public const int MaxChapterTitleLength = 300;
+        public const int DefaultChapterTitleLength = 60;
+
+        /// <summary>
+        /// 章節標題的字數上限。超過這個字數的行不視為章節，
+        /// 內文段落裡提到章節字樣時才不會被誤抓進章節清單。
+        /// </summary>
+        public int ChapterTitleMaxLength
+        {
+            get
+            {
+                // 舊設定檔沒有這個欄位；被手動改成離譜的值時也一併夾回範圍內。
+                var value = _config.ChapterTitleMaxLength ?? DefaultChapterTitleLength;
+                return Math.Clamp(value, MinChapterTitleLength, MaxChapterTitleLength);
+            }
+            set
+            {
+                var clamped = Math.Clamp(value, MinChapterTitleLength, MaxChapterTitleLength);
+                if (_config.ChapterTitleMaxLength == clamped) return;
+                _config.ChapterTitleMaxLength = clamped;
+                SaveConfig();
+            }
+        }
+
+        private const char CacheKeySeparator = (char)1;
+
+        /// <summary>
+        /// 章節快取的有效性條件：Regex 清單 + 標題字數上限 + 檔案行數。
+        /// 任一改變就代表舊的章節資料不能用了。
+        /// </summary>
+        public static string BuildChapterCacheKey(IEnumerable<string> patterns, int titleMaxLength, int lineCount)
+        {
+            // 分隔符用不會出現在 Regex 設定裡的控制字元，避免不同清單湊出同一把 key。
+            return string.Join(CacheKeySeparator, patterns)
+                   + CacheKeySeparator + titleMaxLength
+                   + CacheKeySeparator + lineCount;
+        }
+
+        /// <summary>
+        /// 記下掃描出來的章節，下次開同一個檔案直接取用。
+        /// </summary>
+        public void UpdateChapters(string fileName, List<ChapterItem> chapters, string cacheKey)
+        {
+            if (string.IsNullOrEmpty(fileName)) return;
+
+            var item = _config.history.FirstOrDefault(h => h.FileName == fileName);
+            if (item == null)
+            {
+                item = new HistoryItem { FileName = fileName };
+                _config.history.Add(item);
+            }
+
+            item.Chapters = chapters;
+            item.ChapterCacheKey = cacheKey;
+            SaveConfig();
+        }
 
         public List<HistoryItem> History => _config.history;
 

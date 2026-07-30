@@ -4,10 +4,13 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:local="using:MeowTextReader.ReaderPage"
+    xmlns:main="using:MeowTextReader.MainPage"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d">
 
     <Page.Resources>
+        <local:BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
+        <main:InverseBooleanToVisibilityConverter x:Key="InverseBooleanToVisibilityConverter" />
         <Storyboard x:Key="SlideOutBottomPanel">
             <DoubleAnimation
                 Storyboard.TargetName="BottomPanel"
@@ -109,14 +112,112 @@
                         VerticalAlignment="Center"
                         TextWrapping="WrapWholeWords" />
                 </Grid>
-                <Button
-                    x:Name="SettingsButton"
+                <StackPanel
                     Grid.Column="1"
-                    Width="80"
                     Margin="8,0,0,10"
                     HorizontalAlignment="Right"
-                    Click="SettingsButton_Click"
-                    Content="設定" />
+                    Orientation="Horizontal"
+                    Spacing="8">
+                    <Button
+                        x:Name="ChapterButton"
+                        Width="80"
+                        Content="章節">
+                        <Button.Flyout>
+                            <!--  用 Flyout 而非 TeachingTip：TeachingTip 的 MaxWidth 寫在 template 內部（336），超過就裁掉；FlyoutPresenter 的寬高是 Style setter，可以直接覆寫  -->
+                            <Flyout
+                                x:Name="ChapterFlyout"
+                                Opened="ChapterFlyout_Opened"
+                                Opening="ChapterFlyout_Opening"
+                                Placement="Top">
+                                <Flyout.FlyoutPresenterStyle>
+                                    <Style TargetType="FlyoutPresenter">
+                                        <!--  寬度由 UpdateChapterFlyoutWidth 依內容決定，上限 460  -->
+                                        <Setter Property="MinWidth" Value="0" />
+                                        <Setter Property="MaxWidth" Value="460" />
+                                        <Setter Property="MaxHeight" Value="600" />
+                                        <!--  預設樣式的 HorizontalScrollMode 是 Auto：內容一超寬就會變成橫向捲動，
+                                              左邊會被捲出去看不見。關掉它，讓過長的標題改用換行處理  -->
+                                        <Setter Property="ScrollViewer.HorizontalScrollMode" Value="Disabled" />
+                                        <Setter Property="ScrollViewer.HorizontalScrollBarVisibility" Value="Disabled" />
+                                        <!--  ListView 自己有垂直捲軸，關掉 presenter 的避免雙層捲動  -->
+                                        <Setter Property="ScrollViewer.VerticalScrollMode" Value="Disabled" />
+                                        <Setter Property="ScrollViewer.VerticalScrollBarVisibility" Value="Disabled" />
+                                    </Style>
+                                </Flyout.FlyoutPresenterStyle>
+                                <Grid x:Name="ChapterTipRoot" RowSpacing="8">
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="Auto" />
+                                    </Grid.RowDefinitions>
+                                    <Grid Grid.Row="0">
+                                        <TextBlock
+                                            VerticalAlignment="Center"
+                                            FontSize="16"
+                                            FontWeight="SemiBold"
+                                            Text="章節" />
+                                        <Button
+                                            x:Name="RefreshChaptersButton"
+                                            HorizontalAlignment="Right"
+                                            AutomationProperties.Name="重新抓取章節"
+                                            Click="RefreshChapters_Click"
+                                            ToolTipService.ToolTip="重新抓取章節">
+                                            <FontIcon FontSize="14" Glyph="&#xE72C;" />
+                                        </Button>
+                                    </Grid>
+                                    <ListView
+                                        x:Name="ChapterListView"
+                                        Grid.Row="1"
+                                        MaxHeight="480"
+                                        IsItemClickEnabled="True"
+                                        ItemClick="ChapterListView_ItemClick"
+                                        ItemsSource="{Binding Chapters}"
+                                        SelectionMode="None"
+                                        Visibility="{Binding HasChapters, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                        <ListView.ItemContainerStyle>
+                                            <Style TargetType="ListViewItem">
+                                                <Setter Property="MinHeight" Value="0" />
+                                                <Setter Property="Padding" Value="8,6" />
+                                                <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                                            </Style>
+                                        </ListView.ItemContainerStyle>
+                                        <ListView.ItemTemplate>
+                                            <DataTemplate>
+                                                <Grid ColumnSpacing="8">
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="*" />
+                                                        <ColumnDefinition Width="Auto" />
+                                                    </Grid.ColumnDefinitions>
+                                                    <!--  寬度貼合內容，只有超過上限的長標題才會換行  -->
+                                                    <TextBlock
+                                                        Grid.Column="0"
+                                                        Text="{Binding Title}"
+                                                        TextWrapping="Wrap" />
+                                                    <TextBlock
+                                                        Grid.Column="1"
+                                                        VerticalAlignment="Top"
+                                                        FontSize="12"
+                                                        Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                                        Text="{Binding LineNumber}" />
+                                                </Grid>
+                                            </DataTemplate>
+                                        </ListView.ItemTemplate>
+                                    </ListView>
+                                    <TextBlock
+                                        Grid.Row="1"
+                                        Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                        Text="沒有抓到章節。可在 MainPage 的 GlobalSetting 調整章節 Regex 後再重新整理。"
+                                        TextWrapping="Wrap"
+                                        Visibility="{Binding HasChapters, Converter={StaticResource InverseBooleanToVisibilityConverter}}" />
+                                </Grid>
+                            </Flyout>
+                        </Button.Flyout>
+                    </Button>
+                    <Button
+                        x:Name="SettingsButton"
+                        Width="80"
+                        Click="SettingsButton_Click"
+                        Content="設定" />
+                </StackPanel>
             </Grid>
             <Slider
                 x:Name="ScrollSlider"
