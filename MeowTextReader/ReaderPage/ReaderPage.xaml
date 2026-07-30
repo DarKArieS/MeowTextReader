@@ -8,16 +8,16 @@
     mc:Ignorable="d">
 
     <Page.Resources>
-        <Storyboard x:Key="SlideOutTopPanel">
+        <Storyboard x:Key="SlideOutBottomPanel">
             <DoubleAnimation
-                Storyboard.TargetName="TopPanel"
+                Storyboard.TargetName="BottomPanel"
                 Storyboard.TargetProperty="(UIElement.RenderTransform).(TranslateTransform.Y)"
-                To="-100"
+                To="100"
                 Duration="0:0:0.2" />
         </Storyboard>
-        <Storyboard x:Key="SlideInTopPanel">
+        <Storyboard x:Key="SlideInBottomPanel">
             <DoubleAnimation
-                Storyboard.TargetName="TopPanel"
+                Storyboard.TargetName="BottomPanel"
                 Storyboard.TargetProperty="(UIElement.RenderTransform).(TranslateTransform.Y)"
                 To="0"
                 Duration="0:0:0.2" />
@@ -76,10 +76,10 @@
         </Grid>
 
         <StackPanel
-            x:Name="TopPanel"
+            x:Name="BottomPanel"
             Height="Auto"
             Padding="8"
-            VerticalAlignment="Top"
+            VerticalAlignment="Bottom"
             Background="{ThemeResource ApplicationPageBackgroundThemeBrush}"
             Opacity="1"
             Orientation="Vertical">
@@ -141,7 +141,8 @@
             x:Name="SettingsTeachingTip"
             Title="設定"
             IsLightDismissEnabled="True"
-            PreferredPlacement="TopRight">
+            PreferredPlacement="Top"
+            Target="{x:Bind SettingsButton}">
             <local:SettingsDialog />
         </TeachingTip>
     </Grid>

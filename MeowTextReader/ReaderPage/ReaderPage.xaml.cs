@@ -290,29 +290,29 @@ namespace MeowTextReader.ReaderPage
 
         private void ReaderTextListView_Tapped(object sender, Microsoft.UI.Xaml.Input.TappedRoutedEventArgs e)
         {
-            ToggleTopPanel();
+            ToggleBottomPanel();
             e.Handled = true;
         }
 
-        private void ToggleTopPanel() {
-            if (TopPanel.Visibility == Visibility.Visible)
+        private void ToggleBottomPanel() {
+            if (BottomPanel.Visibility == Visibility.Visible)
             {
-                var slideOut = (Storyboard)this.Resources["SlideOutTopPanel"];
-                // 設定動畫 To 為 -TopPanel.ActualHeight
+                var slideOut = (Storyboard)this.Resources["SlideOutBottomPanel"];
+                // 設定動畫 To 為 BottomPanel.ActualHeight
                 var anim = (DoubleAnimation)slideOut.Children[0];
-                anim.To = -TopPanel.ActualHeight;
+                anim.To = BottomPanel.ActualHeight;
                 slideOut.Completed += SlideOut_Completed;
                 slideOut.Begin();
             }
             else
             {
-                // 先將 TopPanel 移到畫面外
-                var tt = TopPanel.RenderTransform as TranslateTransform;
-                if (tt != null) tt.Y = -TopPanel.ActualHeight;
-                TopPanel.Visibility = Visibility.Visible;
-                var slideIn = (Storyboard)this.Resources["SlideInTopPanel"];
+                // 先將 BottomPanel 移到畫面外
+                var tt = BottomPanel.RenderTransform as TranslateTransform;
+                if (tt != null) tt.Y = BottomPanel.ActualHeight;
+                BottomPanel.Visibility = Visibility.Visible;
+                var slideIn = (Storyboard)this.Resources["SlideInBottomPanel"];
                 var anim = (DoubleAnimation)slideIn.Children[0];
-                anim.From = -TopPanel.ActualHeight;
+                anim.From = BottomPanel.ActualHeight;
                 anim.To = 0;
                 slideIn.Begin();
             }
@@ -338,10 +338,10 @@ namespace MeowTextReader.ReaderPage
 
         private void SlideOut_Completed(object? sender, object e)
         {
-            TopPanel.Visibility = Visibility.Collapsed;
-            var tt = TopPanel.RenderTransform as TranslateTransform;
+            BottomPanel.Visibility = Visibility.Collapsed;
+            var tt = BottomPanel.RenderTransform as TranslateTransform;
             if (tt != null) tt.Y = 0; // reset for next show
-            var slideOut = (Storyboard)this.Resources["SlideOutTopPanel"];
+            var slideOut = (Storyboard)this.Resources["SlideOutBottomPanel"];
             slideOut.Completed -= SlideOut_Completed;
         }
 
@@ -359,7 +359,7 @@ namespace MeowTextReader.ReaderPage
             }
             else if (e.Key == VirtualKey.Escape)
             {
-                ToggleTopPanel();
+                ToggleBottomPanel();
                 e.Handled = true;
             }
         }
