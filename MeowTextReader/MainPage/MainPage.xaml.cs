@@ -178,6 +178,24 @@ namespace MeowTextReader.MainPage
             ViewModel.BackCommand.Execute(null);
         }
 
+        private void RawConfig_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                var path = MainRepo.Instance.SaveFilePath;
+                if (!System.IO.File.Exists(path))
+                {
+                    System.IO.File.WriteAllText(path, "{}", new System.Text.UTF8Encoding(encoderShouldEmitUTF8Identifier: false));
+                }
+                System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+                {
+                    FileName = path,
+                    UseShellExecute = true
+                });
+            }
+            catch { }
+        }
+
         private void FolderListView_ItemClick(object sender, ItemClickEventArgs e)
         {
             if (e.ClickedItem is FileItem fileItem)

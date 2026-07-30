@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Collections.Generic;
@@ -130,12 +131,29 @@ namespace MeowTextReader
 
         private static string GetSaveFilePath()
         {
-            string folder = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+            // 打包(MSIX)應用程式呼叫 Environment.GetFolderPath(LocalApplicationData) 時，
+            // 系統會將路徑重新導向到套件的虛擬容器內，這個路徑只有本行程看得到；
+            // 外部程式（例如記事本）用同一個字串路徑打開時會找不到檔案。
+            // Windows.Storage.ApplicationData.Current.LocalFolder.Path 回傳的才是實體、
+            // 外部程式也能存取到的路徑（%LOCALAPPDATA%\Packages\<PackageFamilyName>\LocalState），
+            // 所以優先使用它；未打包執行（例如單元測試、非 MSIX 部署）時再退回原本的方式。
+            string folder;
+            try
+            {
+                folder = Windows.Storage.ApplicationData.Current.LocalFolder.Path;
+            }
+            catch
+            {
+                folder = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+            }
             string appFolder = Path.Combine(folder, "MeowTextReader");
             if (!Directory.Exists(appFolder))
                 Directory.CreateDirectory(appFolder);
             return Path.Combine(appFolder, "appConfig.json");
         }
+
+        /// <summary>設定 json 檔案的完整路徑，供外部（例如以編輯器打開）使用。</summary>
+        public string SaveFilePath => _saveFilePath;
 
         public string? FolderPath
         {
@@ -366,10 +384,20 @@ namespace MeowTextReader
             ReaderSettingChanged?.Invoke();
         }
 
+        private static readonly Encoding Utf8NoBom = new UTF8Encoding(encoderShouldEmitUTF8Identifier: false);
+
+        private static readonly JsonSerializerOptions SaveJsonOptions = new JsonSerializerOptions
+        {
+            WriteIndented = true,
+            // 預設編碼器會將非 ASCII 字元（例如中文）跳脫成 \uXXXX，
+            // 這裡改用 UnsafeRelaxedJsonEscaping 讓設定檔顯示真實字元，方便使用者用編輯器檢視/編輯。
+            Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping
+        };
+
         private void SaveConfig()
         {
-            var json = JsonSerializer.Serialize(_config, new JsonSerializerOptions { WriteIndented = true });
-            File.WriteAllText(_saveFilePath, json);
+            var json = JsonSerializer.Serialize(_config, SaveJsonOptions);
+            File.WriteAllText(_saveFilePath, json, Utf8NoBom);
         }
 
         private void LoadConfig()
@@ -378,7 +406,7 @@ namespace MeowTextReader
             {
                 try
                 {
-                    var json = File.ReadAllText(_saveFilePath);
+                    var json = File.ReadAllText(_saveFilePath, Utf8NoBom);
                     _config = JsonSerializer.Deserialize<AppConfig>(json) ?? new AppConfig();
                 }
                 catch

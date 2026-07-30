@@ -20,18 +20,29 @@
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
         <StackPanel Grid.Row="0">
-            <StackPanel Margin="0,0,0,8" Orientation="Horizontal">
+            <Grid Margin="0,0,0,8">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <StackPanel Grid.Column="0" Orientation="Horizontal">
+                    <Button
+                        Width="120"
+                        Margin="0,0,0,0"
+                        Click="Back_Click"
+                        Content="返回上一頁" />
+                    <Button
+                        Width="120"
+                        Margin="8,0,0,0"
+                        Click="SelectFolder_Click"
+                        Content="選擇資料夾" />
+                </StackPanel>
                 <Button
-                    Width="120"
-                    Margin="0,0,0,0"
-                    Click="Back_Click"
-                    Content="返回上一頁" />
-                <Button
-                    Width="120"
+                    Grid.Column="1"
                     Margin="8,0,0,0"
-                    Click="SelectFolder_Click"
-                    Content="選擇資料夾" />
-            </StackPanel>
+                    Click="RawConfig_Click"
+                    Content="RawConfig" />
+            </Grid>
             <TextBlock
                 Margin="4,0,0,0"
                 FontSize="16"
