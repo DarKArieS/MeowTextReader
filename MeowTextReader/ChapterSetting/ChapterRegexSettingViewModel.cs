@@ -5,49 +5,17 @@ using System.ComponentModel;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Windows.Input;
-using MeowTextReader.Repo;
+using MeowTextReader.MainPage;
 using MeowTextReader.Repo.Chapter;
 
-namespace MeowTextReader.MainPage.GlobalSetting
+namespace MeowTextReader.ChapterSetting
 {
     /// <summary>
-    /// 清單上的一列 Regex。用物件而非裸字串，TextBox 才綁得到 TwoWay，
-    /// 內容重複時也還認得出是哪一列。
+    /// 章節抓取設定區塊（Regex 清單、標題字數上限、開頭跳過行數）的共用邏輯。
+    /// 不知道自己編輯的是全域預設值還是單一檔案的專屬設定，由呼叫端決定初始值與存檔目標，
+    /// 讓 GlobalSettingDialog 與 ChapterSettingDialog 可以共用同一份 UI 與驗證邏輯。
     /// </summary>
-    public class ChapterRegexEntry : INotifyPropertyChanged
-    {
-        private string _pattern;
-
-        public ChapterRegexEntry(string pattern = "")
-        {
-            _pattern = pattern;
-        }
-
-        public string Pattern
-        {
-            get => _pattern;
-            set
-            {
-                if (_pattern == value) return;
-                _pattern = value;
-                OnPropertyChanged();
-            }
-        }
-
-        /// <summary>
-        /// ListViewItem 的自動化名稱會回退到 ToString()，這裡回傳 Regex 本身，
-        /// 避免朗讀程式讀出型別名稱。
-        /// </summary>
-        public override string ToString() => _pattern;
-
-        public event PropertyChangedEventHandler? PropertyChanged;
-        private void OnPropertyChanged([CallerMemberName] string? name = null)
-        {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
-        }
-    }
-
-    public class GlobalSettingDialogViewModel : INotifyPropertyChanged
+    public class ChapterRegexSettingViewModel : INotifyPropertyChanged
     {
         private string? _errorMessage;
         private double _titleMaxLength;
@@ -75,9 +43,9 @@ namespace MeowTextReader.MainPage.GlobalSetting
             }
         }
 
-        public double TitleMaxLengthMinimum => MainRepo.MinChapterTitleLength;
+        public double TitleMaxLengthMinimum => ChapterRegexSetting.MinTitleMaxLength;
 
-        public double TitleMaxLengthMaximum => MainRepo.MaxChapterTitleLength;
+        public double TitleMaxLengthMaximum => ChapterRegexSetting.MaxTitleMaxLength;
 
         /// <summary>
         /// 開頭要跳過的行數，跳過的行不參與章節比對。NumberBox 綁的是 double，
@@ -99,13 +67,13 @@ namespace MeowTextReader.MainPage.GlobalSetting
             }
         }
 
-        public double SkipLinesMinimum => MainRepo.MinChapterSkipLines;
+        public double SkipLinesMinimum => ChapterRegexSetting.MinSkipLines;
 
-        public double SkipLinesMaximum => MainRepo.MaxChapterSkipLines;
+        public double SkipLinesMaximum => ChapterRegexSetting.MaxSkipLines;
 
         public ICommand RemoveCommand { get; }
 
-        /// <summary>驗證失敗時顯示在對話框底部；null 表示沒有錯誤。</summary>
+        /// <summary>驗證失敗時顯示在畫面底部；null 表示沒有錯誤。</summary>
         public string? ErrorMessage
         {
             get => _errorMessage;
@@ -120,15 +88,15 @@ namespace MeowTextReader.MainPage.GlobalSetting
 
         public bool HasError => !string.IsNullOrEmpty(_errorMessage);
 
-        public GlobalSettingDialogViewModel()
+        public ChapterRegexSettingViewModel(ChapterRegexSetting initial)
         {
             RemoveCommand = new RelayCommand<ChapterRegexEntry>(Remove);
 
-            foreach (var pattern in MainRepo.Instance.ChapterRegexList)
+            foreach (var pattern in initial.EffectiveRegexList())
                 ChapterRegexItems.Add(new ChapterRegexEntry(pattern));
 
-            _titleMaxLength = MainRepo.Instance.ChapterTitleMaxLength;
-            _skipLines = MainRepo.Instance.ChapterSkipLines;
+            _titleMaxLength = initial.EffectiveTitleMaxLength();
+            _skipLines = initial.EffectiveSkipLines();
         }
 
         public void Add() => ChapterRegexItems.Add(new ChapterRegexEntry());
@@ -136,7 +104,7 @@ namespace MeowTextReader.MainPage.GlobalSetting
         /// <summary>把預設的章節 Regex 補回清單（已存在的不重複加）。</summary>
         public void RestoreDefaults()
         {
-            foreach (var pattern in MainRepo.DefaultChapterRegexList)
+            foreach (var pattern in ChapterRegexSetting.DefaultRegexList)
             {
                 if (ChapterRegexItems.Any(e => e.Pattern.Trim() == pattern)) continue;
                 ChapterRegexItems.Add(new ChapterRegexEntry(pattern));
@@ -152,10 +120,12 @@ namespace MeowTextReader.MainPage.GlobalSetting
         }
 
         /// <summary>
-        /// 寫回設定檔。Regex 寫錯就不存，回傳 false 讓對話框留在原地讓使用者修正。
+        /// 驗證並打包成 <see cref="ChapterRegexSetting"/>。Regex 寫錯就不回傳，
+        /// 回傳 false 讓呼叫端把畫面留在原地讓使用者修正。
         /// </summary>
-        public bool TrySave()
+        public bool TrySave(out ChapterRegexSetting result)
         {
+            result = new ChapterRegexSetting();
             var patterns = new List<string>();
 
             foreach (var entry in ChapterRegexItems)
@@ -174,9 +144,9 @@ namespace MeowTextReader.MainPage.GlobalSetting
             }
 
             ErrorMessage = null;
-            MainRepo.Instance.ChapterRegexList = patterns;
-            MainRepo.Instance.ChapterTitleMaxLength = (int)Math.Round(_titleMaxLength);
-            MainRepo.Instance.ChapterSkipLines = (int)Math.Round(_skipLines);
+            result.ChapterRegexList = patterns;
+            result.ChapterTitleMaxLength = (int)Math.Round(_titleMaxLength);
+            result.ChapterSkipLines = (int)Math.Round(_skipLines);
             return true;
         }
 

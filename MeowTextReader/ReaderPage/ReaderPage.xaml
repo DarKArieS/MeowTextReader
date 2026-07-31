@@ -4,15 +4,10 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:local="using:MeowTextReader.ReaderPage"
-    xmlns:main="using:MeowTextReader.MainPage"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d">
 
     <Page.Resources>
-        <local:BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
-        <main:InverseBooleanToVisibilityConverter x:Key="InverseBooleanToVisibilityConverter" />
-        <local:BooleanToFontWeightConverter x:Key="BooleanToFontWeightConverter" />
-        <local:BooleanToAccentBrushConverter x:Key="BooleanToAccentBrushConverter" />
         <Storyboard x:Key="SlideOutBottomPanel">
             <DoubleAnimation
                 Storyboard.TargetName="BottomPanel"
@@ -133,7 +128,7 @@
                                 Placement="Top">
                                 <Flyout.FlyoutPresenterStyle>
                                     <Style TargetType="FlyoutPresenter">
-                                        <!--  寬度由 UpdateChapterFlyoutWidth 依內容決定，上限 460  -->
+                                        <!--  寬度由 ChapterChooseControl 依內容決定，上限 460  -->
                                         <Setter Property="MinWidth" Value="0" />
                                         <Setter Property="MaxWidth" Value="460" />
                                         <Setter Property="MaxHeight" Value="600" />
@@ -146,74 +141,7 @@
                                         <Setter Property="ScrollViewer.VerticalScrollBarVisibility" Value="Disabled" />
                                     </Style>
                                 </Flyout.FlyoutPresenterStyle>
-                                <Grid x:Name="ChapterTipRoot" RowSpacing="8">
-                                    <Grid.RowDefinitions>
-                                        <RowDefinition Height="Auto" />
-                                        <RowDefinition Height="Auto" />
-                                    </Grid.RowDefinitions>
-                                    <Grid Grid.Row="0">
-                                        <TextBlock
-                                            VerticalAlignment="Center"
-                                            FontSize="16"
-                                            FontWeight="SemiBold"
-                                            Text="章節" />
-                                        <Button
-                                            x:Name="RefreshChaptersButton"
-                                            HorizontalAlignment="Right"
-                                            AutomationProperties.Name="重新抓取章節"
-                                            Click="RefreshChapters_Click"
-                                            ToolTipService.ToolTip="重新抓取章節">
-                                            <FontIcon FontSize="14" Glyph="&#xE72C;" />
-                                        </Button>
-                                    </Grid>
-                                    <ListView
-                                        x:Name="ChapterListView"
-                                        Grid.Row="1"
-                                        MaxHeight="480"
-                                        IsItemClickEnabled="True"
-                                        ItemClick="ChapterListView_ItemClick"
-                                        ItemsSource="{Binding Chapters}"
-                                        SelectionMode="None"
-                                        Visibility="{Binding HasChapters, Converter={StaticResource BooleanToVisibilityConverter}}">
-                                        <ListView.ItemContainerStyle>
-                                            <Style TargetType="ListViewItem">
-                                                <Setter Property="MinHeight" Value="0" />
-                                                <Setter Property="Padding" Value="8,6" />
-                                                <Setter Property="HorizontalContentAlignment" Value="Stretch" />
-                                            </Style>
-                                        </ListView.ItemContainerStyle>
-                                        <ListView.ItemTemplate>
-                                            <DataTemplate>
-                                                <Grid ColumnSpacing="8">
-                                                    <Grid.ColumnDefinitions>
-                                                        <ColumnDefinition Width="*" />
-                                                        <ColumnDefinition Width="Auto" />
-                                                    </Grid.ColumnDefinitions>
-                                                    <!--  寬度貼合內容，只有超過上限的長標題才會換行；正在讀的章節用強調色+粗體標示  -->
-                                                    <TextBlock
-                                                        Grid.Column="0"
-                                                        FontWeight="{Binding IsCurrent, Converter={StaticResource BooleanToFontWeightConverter}}"
-                                                        Foreground="{Binding IsCurrent, Converter={StaticResource BooleanToAccentBrushConverter}}"
-                                                        Text="{Binding Title}"
-                                                        TextWrapping="Wrap" />
-                                                    <TextBlock
-                                                        Grid.Column="1"
-                                                        VerticalAlignment="Top"
-                                                        FontSize="12"
-                                                        FontWeight="{Binding IsCurrent, Converter={StaticResource BooleanToFontWeightConverter}}"
-                                                        Foreground="{Binding IsCurrent, Converter={StaticResource BooleanToAccentBrushConverter}}"
-                                                        Text="{Binding LineNumber}" />
-                                                </Grid>
-                                            </DataTemplate>
-                                        </ListView.ItemTemplate>
-                                    </ListView>
-                                    <TextBlock
-                                        Grid.Row="1"
-                                        Foreground="{ThemeResource TextFillColorSecondaryBrush}"
-                                        Text="沒有抓到章節。可在 MainPage 的 GlobalSetting 調整章節 Regex 後再重新整理。"
-                                        TextWrapping="Wrap"
-                                        Visibility="{Binding HasChapters, Converter={StaticResource InverseBooleanToVisibilityConverter}}" />
-                                </Grid>
+                                <local:ChapterChooseDialog x:Name="ChapterChooseControl" />
                             </Flyout>
                         </Button.Flyout>
                     </Button>

@@ -1,0 +1,134 @@
+<UserControl
+    x:Class="MeowTextReader.ChapterSetting.ChapterRegexSettingControl"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d">
+
+    <Grid x:Name="RootPanel">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <TextBlock
+            Grid.Row="0"
+            FontSize="16"
+            FontWeight="SemiBold"
+            Text="章節抓取設定" />
+
+        <TextBlock
+            Grid.Row="1"
+            Margin="0,4,0,8"
+            FontSize="12"
+            Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+            TextWrapping="Wrap">
+            章節 regex 判斷，比對成功該行就視為章節標題。
+        </TextBlock>
+
+        <ListView
+            Grid.Row="2"
+            MaxHeight="280"
+            ItemsSource="{Binding ChapterRegexItems}"
+            SelectionMode="None">
+            <ListView.ItemContainerStyle>
+                <Style TargetType="ListViewItem">
+                    <Setter Property="MinHeight" Value="0" />
+                    <Setter Property="Padding" Value="0,2" />
+                    <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                </Style>
+            </ListView.ItemContainerStyle>
+            <ListView.ItemTemplate>
+                <DataTemplate>
+                    <Grid ColumnSpacing="8">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <TextBox
+                            Grid.Column="0"
+                            FontFamily="Consolas"
+                            Text="{Binding Pattern, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                        <Button
+                            Grid.Column="1"
+                            AutomationProperties.Name="刪除這一列"
+                            Command="{Binding DataContext.RemoveCommand, ElementName=RootPanel}"
+                            CommandParameter="{Binding}"
+                            ToolTipService.ToolTip="刪除這一列">
+                            <FontIcon FontSize="14" Glyph="&#xE74D;" />
+                        </Button>
+                    </Grid>
+                </DataTemplate>
+            </ListView.ItemTemplate>
+        </ListView>
+
+        <StackPanel
+            Grid.Row="3"
+            Margin="0,8,0,0"
+            Orientation="Horizontal"
+            Spacing="8">
+            <Button Click="AddRegex_Click" Content="新增" />
+            <Button Click="RestoreDefaults_Click" Content="加回預設值" />
+        </StackPanel>
+
+        <StackPanel Grid.Row="4" Margin="0,20,0,0">
+            <TextBlock FontWeight="SemiBold" Text="章節標題字數上限" />
+            <TextBlock
+                Margin="0,4,0,0"
+                FontSize="12"
+                Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                TextWrapping="Wrap">
+                超過這個字數的行不視為章節。
+            </TextBlock>
+            <NumberBox
+                Width="150"
+                Margin="0,8,0,0"
+                HorizontalAlignment="Left"
+                AutomationProperties.Name="章節標題字數上限"
+                LargeChange="20"
+                Maximum="{Binding TitleMaxLengthMaximum}"
+                Minimum="{Binding TitleMaxLengthMinimum}"
+                SmallChange="5"
+                SpinButtonPlacementMode="Compact"
+                ValidationMode="InvalidInputOverwritten"
+                Value="{Binding TitleMaxLength, Mode=TwoWay}" />
+        </StackPanel>
+
+        <StackPanel Grid.Row="5" Margin="0,20,0,0">
+            <TextBlock FontWeight="SemiBold" Text="從第幾行後開始比對章節" />
+            <TextBlock
+                Margin="0,4,0,0"
+                FontSize="12"
+                Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                TextWrapping="Wrap">
+                跳過開頭幾行不比對，避開書名頁、版權頁或目錄裡誤判成章節的字樣。
+            </TextBlock>
+            <NumberBox
+                Width="150"
+                Margin="0,8,0,0"
+                HorizontalAlignment="Left"
+                AutomationProperties.Name="從第幾行後開始比對章節"
+                LargeChange="20"
+                Maximum="{Binding SkipLinesMaximum}"
+                Minimum="{Binding SkipLinesMinimum}"
+                SmallChange="1"
+                SpinButtonPlacementMode="Compact"
+                ValidationMode="InvalidInputOverwritten"
+                Value="{Binding SkipLines, Mode=TwoWay}" />
+        </StackPanel>
+
+        <InfoBar
+            Grid.Row="6"
+            Margin="0,8,0,0"
+            IsClosable="False"
+            IsOpen="{Binding HasError}"
+            Message="{Binding ErrorMessage}"
+            Severity="Error" />
+    </Grid>
+</UserControl>

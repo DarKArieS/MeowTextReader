@@ -42,6 +42,12 @@ namespace MeowTextReader.ReaderPage
             this.Unloaded += ReaderPage_Unloaded;
             ReaderTextListView.Loaded += ReaderTextListView_Loaded;
             MainRepo.Instance.LastPage = AppPage.ReaderPage;
+
+            ChapterChooseControl.Attach(ViewModel);
+            ChapterChooseControl.CurrentLineIndexProvider = () => GetFirstVisibleIndex() ?? 0;
+            ChapterChooseControl.CurrentLineFractionProvider = () => GetLineFraction(GetFirstVisibleIndex() ?? 0);
+            ChapterChooseControl.ScrollToLineAction = ScrollToLine;
+            ChapterChooseControl.ChapterSelected += ChapterChooseControl_ChapterSelected;
         }
 
         private void ReaderPage_Loaded(object sender, RoutedEventArgs e)
@@ -293,82 +299,18 @@ namespace MeowTextReader.ReaderPage
             }
         }
 
-        /// <summary>
-        /// Flyout 的內容不在 Page 的視覺樹下，DataContext 不會自己傳進去。
-        /// 在 Opening 設定：此時還沒 measure，也不必去猜內容何時被實體化。
-        /// </summary>
         private void ChapterFlyout_Opening(object? sender, object e)
         {
-            ChapterTipRoot.DataContext = ViewModel;
-            ViewModel.EnsureChaptersLoaded();
-            UpdateChapterFlyoutWidth();
+            ChapterChooseControl.PrepareOpening();
         }
 
         private void ChapterFlyout_Opened(object? sender, object e)
         {
-            ScrollChapterListToCurrent();
+            ChapterChooseControl.OnOpened();
         }
 
-        /// <summary>
-        /// 依最長的章節標題決定彈窗寬度。只量一次而不是讓 ListView 自己撐開，
-        /// 否則虛擬化只量得到已實體化的項目，捲動時寬度會跳動。
-        /// </summary>
-        private void UpdateChapterFlyoutWidth()
+        private void ChapterChooseControl_ChapterSelected(ChapterItem chapter)
         {
-            if (ViewModel.Chapters.Count == 0)
-            {
-                ChapterTipRoot.Width = double.NaN;
-                return;
-            }
-
-            string longest = string.Empty;
-            foreach (var chapter in ViewModel.Chapters)
-            {
-                if (chapter.Title.Length > longest.Length) longest = chapter.Title;
-            }
-
-            var probe = new TextBlock { Text = longest };
-            probe.Measure(new Size(double.PositiveInfinity, double.PositiveInfinity));
-
-            // 行號欄 + 欄距 + ListViewItem padding
-            const double Gutter = 96;
-
-            // 上限要留給 presenter 的 padding/border 與垂直捲軸，否則內容比 presenter
-            // 的可用寬度還寬，就會被裁掉。超過上限的標題交給 TextWrapping 換行。
-            const double MaxContentWidth = 420;
-            ChapterTipRoot.Width = Math.Clamp(probe.DesiredSize.Width + Gutter, 260, MaxContentWidth);
-        }
-
-        private void RefreshChapters_Click(object sender, RoutedEventArgs e)
-        {
-            ViewModel.LoadChapters(forceRefresh: true);
-            UpdateChapterFlyoutWidth();
-            ScrollChapterListToCurrent();
-        }
-
-        /// <summary>
-        /// 打開清單時標記並停在正在讀的章節：高亮讓人一眼看出目前位置，
-        /// 長篇文章也不必自己捲半天找。
-        /// </summary>
-        private void ScrollChapterListToCurrent()
-        {
-            if (!ViewModel.HasChapters) return;
-
-            ViewModel.UpdateCurrentChapter(GetFirstVisibleIndex() ?? 0);
-            int index = ViewModel.CurrentChapterIndex;
-            if (index < 0) return;
-
-            // 清單這時才剛產生容器，要等版面配置完成才捲得動。
-            DispatcherQueue.TryEnqueue(DispatcherQueuePriority.Low, () =>
-            {
-                ChapterListView.ScrollIntoView(ViewModel.Chapters[index], ScrollIntoViewAlignment.Leading);
-            });
-        }
-
-        private void ChapterListView_ItemClick(object sender, ItemClickEventArgs e)
-        {
-            if (e.ClickedItem is not ChapterItem chapter) return;
-
             ChapterFlyout.Hide();
             ScrollToLine(chapter.LineIndex, 0);
 

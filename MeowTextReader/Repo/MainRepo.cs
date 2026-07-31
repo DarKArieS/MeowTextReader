@@ -145,74 +145,86 @@ namespace MeowTextReader.Repo
 
         public static event Action? ReaderSettingChanged;
 
-        /// <summary>使用者沒設定過時採用的章節 Regex。</summary>
-        public static readonly IReadOnlyList<string> DefaultChapterRegexList = new[]
-        {
-            "第([0-9一二三四五六七八九十]+)話",
-            "第([0-9一二三四五六七八九十]+)章"
-        };
-
         /// <summary>
-        /// 章節抓取用的 Regex 清單。設定檔沒有這個欄位時（舊設定檔）給預設值；
-        /// 使用者刻意清空則尊重其設定，不再塞回預設值。
+        /// 全域章節抓取設定。單一檔案（HistoryItem）沒有專屬設定時，以此為預設值。
         /// </summary>
-        public List<string> ChapterRegexList
+        public ChapterRegexSetting GlobalChapterSetting
         {
-            get => _config.ChapterRegexList ??= new List<string>(DefaultChapterRegexList);
+            get => _config.ChapterSetting ??= new ChapterRegexSetting();
             set
             {
-                _config.ChapterRegexList = value ?? new List<string>();
+                _config.ChapterSetting = value ?? new ChapterRegexSetting();
                 SaveConfig();
             }
         }
 
-        public const int MinChapterTitleLength = 8;
-        public const int MaxChapterTitleLength = 300;
-        public const int DefaultChapterTitleLength = 60;
-
         /// <summary>
-        /// 章節標題的字數上限。超過這個字數的行不視為章節，
-        /// 內文段落裡提到章節字樣時才不會被誤抓進章節清單。
+        /// 取得指定檔案生效中的章節抓取設定：檔案關掉「使用預設值」且填過自己的設定時用它，
+        /// 否則退回全域預設值。
         /// </summary>
-        public int ChapterTitleMaxLength
+        public ChapterRegexSetting GetChapterSetting(string? fileName)
         {
-            get
+            if (!string.IsNullOrEmpty(fileName))
             {
-                // 舊設定檔沒有這個欄位；被手動改成離譜的值時也一併夾回範圍內。
-                var value = _config.ChapterTitleMaxLength ?? DefaultChapterTitleLength;
-                return Math.Clamp(value, MinChapterTitleLength, MaxChapterTitleLength);
+                var history = GetHistoryItem(fileName);
+                if (history != null && !history.UseDefaultChapterSetting && history.ChapterSetting != null)
+                    return history.ChapterSetting;
             }
-            set
-            {
-                var clamped = Math.Clamp(value, MinChapterTitleLength, MaxChapterTitleLength);
-                if (_config.ChapterTitleMaxLength == clamped) return;
-                _config.ChapterTitleMaxLength = clamped;
-                SaveConfig();
-            }
+            return GlobalChapterSetting;
         }
 
-        public const int MinChapterSkipLines = 0;
-        public const int MaxChapterSkipLines = 1000;
-        public const int DefaultChapterSkipLines = 0;
+        /// <summary>
+        /// 取得這個檔案「已經存起來」的章節抓取設定，不管「使用預設值」開關的狀態。
+        /// 給 ChapterSettingDialog 初始化編輯畫面用：即使目前開著「使用預設值」，
+        /// 使用者之前填過的自訂設定也要顯示出來，不能被開關狀態蓋掉。
+        /// </summary>
+        public ChapterRegexSetting GetStoredChapterSetting(string? fileName)
+        {
+            if (!string.IsNullOrEmpty(fileName))
+            {
+                var history = GetHistoryItem(fileName);
+                if (history?.ChapterSetting != null) return history.ChapterSetting;
+            }
+            return GlobalChapterSetting;
+        }
 
         /// <summary>
-        /// 章節掃描要跳過的開頭行數。書名頁、版權頁、目錄常有誤判成章節的字樣，
-        /// 設定這個值可以直接跳過不掃描。
+        /// 寫入指定檔案專屬的章節抓取設定，並關閉這個檔案的「使用預設值」開關。
         /// </summary>
-        public int ChapterSkipLines
+        public void SetChapterSetting(string fileName, ChapterRegexSetting setting)
         {
-            get
+            if (string.IsNullOrEmpty(fileName)) return;
+
+            var item = _config.History.FirstOrDefault(h => h.FileName == fileName);
+            if (item == null)
             {
-                var value = _config.ChapterSkipLines ?? DefaultChapterSkipLines;
-                return Math.Clamp(value, MinChapterSkipLines, MaxChapterSkipLines);
+                item = new HistoryItem { FileName = fileName };
+                _config.History.Add(item);
             }
-            set
+            item.ChapterSetting = setting;
+            item.UseDefaultChapterSetting = false;
+            SaveConfig();
+        }
+
+        /// <summary>
+        /// 切換指定檔案的「使用預設值」開關，不動到底下已經存的自訂設定資料，
+        /// 之後關掉開關還能拿回原本填的值。
+        /// </summary>
+        public void SetChapterSettingUseDefault(string fileName, bool useDefault)
+        {
+            if (string.IsNullOrEmpty(fileName)) return;
+
+            var item = _config.History.FirstOrDefault(h => h.FileName == fileName);
+            if (item == null)
             {
-                var clamped = Math.Clamp(value, MinChapterSkipLines, MaxChapterSkipLines);
-                if (_config.ChapterSkipLines == clamped) return;
-                _config.ChapterSkipLines = clamped;
-                SaveConfig();
+                if (useDefault) return; // 本來就沒紀錄，等於已經在使用預設值，不必新增一筆空的 HistoryItem
+                item = new HistoryItem { FileName = fileName };
+                _config.History.Add(item);
             }
+
+            if (item.UseDefaultChapterSetting == useDefault) return;
+            item.UseDefaultChapterSetting = useDefault;
+            SaveConfig();
         }
 
         private const char CacheKeySeparator = (char)1;

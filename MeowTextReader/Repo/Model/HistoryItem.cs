@@ -48,6 +48,19 @@ namespace MeowTextReader.Repo.Model
         public string? ChapterCacheKey { get; set; }
 
         /// <summary>
+        /// 這個檔案專屬的章節抓取設定。是否生效由 <see cref="UseDefaultChapterSetting"/> 決定，
+        /// 關閉「使用預設值」但還沒填過的話會是 null（見 <see cref="MainRepo.GetChapterSetting"/>）。
+        /// </summary>
+        public ChapterRegexSetting? ChapterSetting { get; set; }
+
+        /// <summary>
+        /// 是否使用全域預設的章節抓取設定。true（含未設定過）時即使 <see cref="ChapterSetting"/>
+        /// 已經填過資料也不採用，只是暫時關閉不用；關掉這個開關就能拿回原本填的設定，
+        /// 不必重新輸入。
+        /// </summary>
+        public bool UseDefaultChapterSetting { get; set; } = true;
+
+        /// <summary>
         /// 閱讀進度百分比（0~100）。資訊不足時回傳 null。
         /// </summary>
         [JsonIgnore]

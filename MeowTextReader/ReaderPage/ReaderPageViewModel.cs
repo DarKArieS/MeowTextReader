@@ -115,13 +115,15 @@ namespace MeowTextReader.ReaderPage
             }
         }
 
+        private string? _filePath;
+
         public ReaderPageViewModel()
         {
-            var path = MainRepo.Instance.OpenFilePath;
-            if (!string.IsNullOrEmpty(path))
+            _filePath = MainRepo.Instance.OpenFilePath;
+            if (!string.IsNullOrEmpty(_filePath))
             {
-                FileName = Path.GetFileNameWithoutExtension(path);
-                LoadFileLines(path);
+                FileName = Path.GetFileNameWithoutExtension(_filePath);
+                LoadFileLines(_filePath);
             }
             FontSize = MainRepo.Instance.FontSize;
             LineSpacing = MainRepo.Instance.LineSpacing;
@@ -150,6 +152,15 @@ namespace MeowTextReader.ReaderPage
         }
 
         /// <summary>
+        /// 重新從磁碟讀取目前的 txt 檔案內容。章節清單的「重新整理」一併呼叫，
+        /// 避免檔案內容已經變更卻只是重新比對記憶體裡的舊行。
+        /// </summary>
+        public void ReloadFileLines()
+        {
+            LoadFileLines(_filePath);
+        }
+
+        /// <summary>
         /// 第一次打開章節清單時才掃描。開檔時就掃會讓大檔案的開啟變慢，
         /// 而多數時候使用者根本不會打開章節清單。
         /// </summary>
@@ -175,9 +186,10 @@ namespace MeowTextReader.ReaderPage
                 return;
             }
 
-            var patterns = MainRepo.Instance.ChapterRegexList;
-            var titleMaxLength = MainRepo.Instance.ChapterTitleMaxLength;
-            var skipLines = MainRepo.Instance.ChapterSkipLines;
+            var setting = MainRepo.Instance.GetChapterSetting(FileName);
+            var patterns = setting.EffectiveRegexList();
+            var titleMaxLength = setting.EffectiveTitleMaxLength();
+            var skipLines = setting.EffectiveSkipLines();
             var cacheKey = MainRepo.BuildChapterCacheKey(patterns, titleMaxLength, skipLines, FileLines.Count);
             var history = MainRepo.Instance.GetHistoryItem(FileName);
 
