@@ -15,6 +15,7 @@ namespace MeowTextReader.ReaderPage
         public ChapterSettingDialog(string fileName)
         {
             this.InitializeComponent();
+            ThemeHelper.ApplyCurrentTheme(this);
             _fileName = fileName;
 
             // 編輯畫面永遠顯示這個檔案已經存起來的自訂設定（不管開關狀態），

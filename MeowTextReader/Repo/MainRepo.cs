@@ -145,6 +145,22 @@ namespace MeowTextReader.Repo
 
         public static event Action? ReaderSettingChanged;
 
+        public AppTheme Theme
+        {
+            get => _config.Theme ?? AppTheme.Default;
+            set
+            {
+                if (_config.Theme != value)
+                {
+                    _config.Theme = value;
+                    SaveConfig();
+                    ThemeChanged?.Invoke();
+                }
+            }
+        }
+
+        public static event Action? ThemeChanged;
+
         /// <summary>
         /// 全域章節抓取設定。單一檔案（HistoryItem）沒有專屬設定時，以此為預設值。
         /// </summary>

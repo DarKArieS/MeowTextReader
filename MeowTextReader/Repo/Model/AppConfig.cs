@@ -12,6 +12,7 @@ namespace MeowTextReader.Repo.Model
         public ReaderSetting ReaderSetting { get; set; } = new ReaderSetting();
         /// <summary>全域章節抓取設定，單一檔案沒有專屬設定時的預設值。</summary>
         public ChapterRegexSetting? ChapterSetting { get; set; }
+        public AppTheme? Theme { get; set; }
         [JsonPropertyName("history")] public List<HistoryItem> History { get; set; } = new();
         public List<FolderScrollHistoryItem> FolderScrollPositions { get; set; } = new();
         public WindowPlacement? WindowPlacement { get; set; }

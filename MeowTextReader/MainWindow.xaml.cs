@@ -34,6 +34,9 @@ namespace MeowTextReader
             AppWindow.Changed += OnAppWindowChanged;
             Closed += OnClosed;
 
+            ApplyTheme(MainRepo.Instance.Theme);
+            MainRepo.ThemeChanged += OnThemeChanged;
+
             // 根據 appConfig 記錄的頁面決定啟動頁
             var lastPage = MainRepo.Instance.LastPage;
             if (lastPage == AppPage.ReaderPage)
@@ -138,9 +141,20 @@ namespace MeowTextReader
 
         private void OnClosed(object sender, WindowEventArgs args)
         {
+            MainRepo.ThemeChanged -= OnThemeChanged;
             _savePlacementTimer.Stop();
             CaptureRestoreBounds();
             SaveWindowPlacement();
+        }
+
+        private void OnThemeChanged()
+        {
+            ApplyTheme(MainRepo.Instance.Theme);
+        }
+
+        private void ApplyTheme(AppTheme theme)
+        {
+            MainFrame.RequestedTheme = ThemeHelper.ToElementTheme(theme);
         }
     }
 }
