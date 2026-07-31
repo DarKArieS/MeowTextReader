@@ -37,14 +37,19 @@ namespace MeowTextReader.Repo.Chapter
         /// 章節標題的字數上限。超過這個字數的行不視為章節——內文段落裡提到
         /// 「第三話」之類的字樣時，才不會被誤認成章節標題。0 或負數表示不限制。
         /// </param>
+        /// <param name="skipLines">
+        /// 開頭要跳過的行數。書名頁、版權頁、目錄常有誤判成章節的字樣，
+        /// 跳過這些行再開始比對。0 或負數表示從頭掃描。
+        /// </param>
         public static List<ChapterItem> Parse(
-            IReadOnlyList<string> lines, IEnumerable<string>? patterns, int maxTitleLength)
+            IReadOnlyList<string> lines, IEnumerable<string>? patterns, int maxTitleLength, int skipLines = 0)
         {
             var result = new List<ChapterItem>();
             var regexes = Compile(patterns);
             if (regexes.Count == 0) return result;
 
-            for (int i = 0; i < lines.Count; i++)
+            var startIndex = Math.Max(0, skipLines);
+            for (int i = startIndex; i < lines.Count; i++)
             {
                 var text = lines[i];
                 if (string.IsNullOrWhiteSpace(text)) continue;

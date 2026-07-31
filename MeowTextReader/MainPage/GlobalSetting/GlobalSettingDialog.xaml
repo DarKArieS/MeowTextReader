@@ -19,6 +19,7 @@
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
         <TextBlock
@@ -104,8 +105,31 @@
                 Value="{Binding TitleMaxLength, Mode=TwoWay}" />
         </StackPanel>
 
+        <StackPanel Grid.Row="5" Margin="0,20,0,0">
+            <TextBlock FontWeight="SemiBold" Text="從第幾行後開始比對章節" />
+            <TextBlock
+                Margin="0,4,0,0"
+                FontSize="12"
+                Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                TextWrapping="Wrap">
+                跳過開頭幾行不比對，避開書名頁、版權頁或目錄裡誤判成章節的字樣。
+            </TextBlock>
+            <NumberBox
+                Width="150"
+                Margin="0,8,0,0"
+                HorizontalAlignment="Left"
+                AutomationProperties.Name="從第幾行後開始比對章節"
+                LargeChange="20"
+                Maximum="{Binding SkipLinesMaximum}"
+                Minimum="{Binding SkipLinesMinimum}"
+                SmallChange="1"
+                SpinButtonPlacementMode="Compact"
+                ValidationMode="InvalidInputOverwritten"
+                Value="{Binding SkipLines, Mode=TwoWay}" />
+        </StackPanel>
+
         <InfoBar
-            Grid.Row="5"
+            Grid.Row="6"
             Margin="0,8,0,0"
             IsClosable="False"
             IsOpen="{Binding HasError}"

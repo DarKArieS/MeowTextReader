@@ -177,7 +177,8 @@ namespace MeowTextReader.ReaderPage
 
             var patterns = MainRepo.Instance.ChapterRegexList;
             var titleMaxLength = MainRepo.Instance.ChapterTitleMaxLength;
-            var cacheKey = MainRepo.BuildChapterCacheKey(patterns, titleMaxLength, FileLines.Count);
+            var skipLines = MainRepo.Instance.ChapterSkipLines;
+            var cacheKey = MainRepo.BuildChapterCacheKey(patterns, titleMaxLength, skipLines, FileLines.Count);
             var history = MainRepo.Instance.GetHistoryItem(FileName);
 
             List<ChapterItem>? chapters = null;
@@ -187,7 +188,7 @@ namespace MeowTextReader.ReaderPage
             if (chapters == null)
             {
                 chapters = ChapterParser.Parse(
-                    FileLines.Select(l => l.Text).ToList(), patterns, titleMaxLength);
+                    FileLines.Select(l => l.Text).ToList(), patterns, titleMaxLength, skipLines);
                 MainRepo.Instance.UpdateChapters(FileName, chapters, cacheKey);
             }
 

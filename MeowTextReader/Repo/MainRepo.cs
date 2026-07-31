@@ -191,17 +191,43 @@ namespace MeowTextReader.Repo
             }
         }
 
+        public const int MinChapterSkipLines = 0;
+        public const int MaxChapterSkipLines = 1000;
+        public const int DefaultChapterSkipLines = 0;
+
+        /// <summary>
+        /// 章節掃描要跳過的開頭行數。書名頁、版權頁、目錄常有誤判成章節的字樣，
+        /// 設定這個值可以直接跳過不掃描。
+        /// </summary>
+        public int ChapterSkipLines
+        {
+            get
+            {
+                var value = _config.ChapterSkipLines ?? DefaultChapterSkipLines;
+                return Math.Clamp(value, MinChapterSkipLines, MaxChapterSkipLines);
+            }
+            set
+            {
+                var clamped = Math.Clamp(value, MinChapterSkipLines, MaxChapterSkipLines);
+                if (_config.ChapterSkipLines == clamped) return;
+                _config.ChapterSkipLines = clamped;
+                SaveConfig();
+            }
+        }
+
         private const char CacheKeySeparator = (char)1;
 
         /// <summary>
-        /// 章節快取的有效性條件：Regex 清單 + 標題字數上限 + 檔案行數。
+        /// 章節快取的有效性條件：Regex 清單 + 標題字數上限 + 起始行數 + 檔案行數。
         /// 任一改變就代表舊的章節資料不能用了。
         /// </summary>
-        public static string BuildChapterCacheKey(IEnumerable<string> patterns, int titleMaxLength, int lineCount)
+        public static string BuildChapterCacheKey(
+            IEnumerable<string> patterns, int titleMaxLength, int skipLines, int lineCount)
         {
             // 分隔符用不會出現在 Regex 設定裡的控制字元，避免不同清單湊出同一把 key。
             return string.Join(CacheKeySeparator, patterns)
                    + CacheKeySeparator + titleMaxLength
+                   + CacheKeySeparator + skipLines
                    + CacheKeySeparator + lineCount;
         }
 

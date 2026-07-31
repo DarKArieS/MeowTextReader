@@ -51,6 +51,7 @@ namespace MeowTextReader.MainPage.GlobalSetting
     {
         private string? _errorMessage;
         private double _titleMaxLength;
+        private double _skipLines;
 
         public ObservableCollection<ChapterRegexEntry> ChapterRegexItems { get; } = new();
 
@@ -78,6 +79,30 @@ namespace MeowTextReader.MainPage.GlobalSetting
 
         public double TitleMaxLengthMaximum => MainRepo.MaxChapterTitleLength;
 
+        /// <summary>
+        /// 開頭要跳過的行數，跳過的行不參與章節比對。NumberBox 綁的是 double，
+        /// 空白輸入會給 NaN，這種情況保留原值不動。
+        /// </summary>
+        public double SkipLines
+        {
+            get => _skipLines;
+            set
+            {
+                if (double.IsNaN(value))
+                {
+                    OnPropertyChanged(); // 把畫面上的值改回目前設定
+                    return;
+                }
+                if (_skipLines == value) return;
+                _skipLines = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public double SkipLinesMinimum => MainRepo.MinChapterSkipLines;
+
+        public double SkipLinesMaximum => MainRepo.MaxChapterSkipLines;
+
         public ICommand RemoveCommand { get; }
 
         /// <summary>驗證失敗時顯示在對話框底部；null 表示沒有錯誤。</summary>
@@ -103,6 +128,7 @@ namespace MeowTextReader.MainPage.GlobalSetting
                 ChapterRegexItems.Add(new ChapterRegexEntry(pattern));
 
             _titleMaxLength = MainRepo.Instance.ChapterTitleMaxLength;
+            _skipLines = MainRepo.Instance.ChapterSkipLines;
         }
 
         public void Add() => ChapterRegexItems.Add(new ChapterRegexEntry());
@@ -150,6 +176,7 @@ namespace MeowTextReader.MainPage.GlobalSetting
             ErrorMessage = null;
             MainRepo.Instance.ChapterRegexList = patterns;
             MainRepo.Instance.ChapterTitleMaxLength = (int)Math.Round(_titleMaxLength);
+            MainRepo.Instance.ChapterSkipLines = (int)Math.Round(_skipLines);
             return true;
         }
 
