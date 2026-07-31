@@ -117,6 +117,8 @@ namespace MeowTextReader.ReaderPage
 
         private string? _filePath;
 
+        public string? FilePath => _filePath;
+
         public ReaderPageViewModel()
         {
             _filePath = MainRepo.Instance.OpenFilePath;

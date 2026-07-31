@@ -411,14 +411,20 @@ namespace MeowTextReader.ReaderPage
         {
             if (sender is FrameworkElement fe && fe.DataContext is LineItem line)
             {
-                var flyout = new Flyout
+                var editItem = new MenuFlyoutItem { Text = "編輯此行" };
+                editItem.Click += (_, _) =>
                 {
-                    Content = new TextBlock
+                    var path = ViewModel.FilePath;
+                    if (!string.IsNullOrEmpty(path))
                     {
-                        Text = $"Line: {line.LineNumber}",
-                        Margin = new Thickness(8,4,8,4)
+                        ExternalEditorLauncher.OpenFileAtLine(path, line.LineNumber);
                     }
                 };
+
+                var flyout = new MenuFlyout();
+                flyout.Items.Add(new MenuFlyoutItem { Text = $"Line: {line.LineNumber}", IsEnabled = false });
+                flyout.Items.Add(new MenuFlyoutSeparator());
+                flyout.Items.Add(editItem);
                 flyout.ShowAt(fe);
             }
             e.Handled = true;
