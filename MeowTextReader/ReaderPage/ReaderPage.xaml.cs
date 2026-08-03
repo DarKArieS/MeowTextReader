@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
+using Windows.ApplicationModel.DataTransfer;
 using Windows.Foundation;
 using Windows.System;
 using MeowTextReader.Repo;
@@ -425,9 +426,44 @@ namespace MeowTextReader.ReaderPage
                 flyout.Items.Add(new MenuFlyoutItem { Text = $"Line: {line.LineNumber}", IsEnabled = false });
                 flyout.Items.Add(new MenuFlyoutSeparator());
                 flyout.Items.Add(editItem);
+
+                // 有翻譯前的原文檔案時，才多給對照原文的選項。
+                if (ViewModel.HasRawFile)
+                {
+                    var viewRawItem = new MenuFlyoutItem { Text = "查看原文" };
+                    viewRawItem.Click += (_, _) =>
+                    {
+                        var rawPath = ViewModel.RawFilePath;
+                        if (!string.IsNullOrEmpty(rawPath))
+                        {
+                            ExternalEditorLauncher.OpenFileAtLine(rawPath, line.LineNumber);
+                        }
+                    };
+
+                    var copyRawItem = new MenuFlyoutItem { Text = "複製原文" };
+                    copyRawItem.Click += (_, _) => CopyRawLine(line.Index);
+
+                    flyout.Items.Add(new MenuFlyoutSeparator());
+                    flyout.Items.Add(viewRawItem);
+                    flyout.Items.Add(copyRawItem);
+                }
+
                 flyout.ShowAt(fe);
             }
             e.Handled = true;
+        }
+
+        /// <summary>
+        /// 把原文檔案對應那一行複製到剪貼簿。原文行數不足（取不到那一行）時什麼都不做。
+        /// </summary>
+        private void CopyRawLine(int lineIndex)
+        {
+            var text = ViewModel.GetRawLineText(lineIndex);
+            if (text == null) return;
+
+            var package = new DataPackage { RequestedOperation = DataPackageOperation.Copy };
+            package.SetText(text);
+            Clipboard.SetContent(package);
         }
     }
 }

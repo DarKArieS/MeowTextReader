@@ -116,8 +116,19 @@ namespace MeowTextReader.ReaderPage
         }
 
         private string? _filePath;
+        private string? _rawFilePath;
+        private List<string>? _rawLines;
 
         public string? FilePath => _filePath;
+
+        /// <summary>
+        /// 翻譯前的原文檔案：目前檔案所在資料夾下的 raw 子資料夾中的同名檔案。
+        /// 不存在時為 null。
+        /// </summary>
+        public string? RawFilePath => _rawFilePath;
+
+        /// <summary>是否有對應的原文檔案，決定右鍵選單要不要出現原文相關選項。</summary>
+        public bool HasRawFile => _rawFilePath != null;
 
         public ReaderPageViewModel()
         {
@@ -126,6 +137,7 @@ namespace MeowTextReader.ReaderPage
             {
                 FileName = Path.GetFileNameWithoutExtension(_filePath);
                 LoadFileLines(_filePath);
+                DetectRawFile(_filePath);
             }
             FontSize = MainRepo.Instance.FontSize;
             LineSpacing = MainRepo.Instance.LineSpacing;
@@ -151,6 +163,46 @@ namespace MeowTextReader.ReaderPage
                 for (int i = 0; i < lines.Length; i++)
                     FileLines.Add(new LineItem(i, lines[i]));
             }
+        }
+
+        /// <summary>
+        /// 找出翻譯前的原文檔案。慣例是把原文放在同資料夾的 raw 子資料夾、檔名相同。
+        /// </summary>
+        private void DetectRawFile(string path)
+        {
+            _rawFilePath = null;
+            _rawLines = null;
+
+            var dir = Path.GetDirectoryName(path);
+            if (string.IsNullOrEmpty(dir)) return;
+
+            var candidate = Path.Combine(dir, "raw", Path.GetFileName(path));
+            if (File.Exists(candidate))
+                _rawFilePath = candidate;
+        }
+
+        /// <summary>
+        /// 原文檔案中對應的那一行（0-based）。原文與譯文行號一一對應，
+        /// 所以直接用同一個索引取。第一次呼叫才讀檔，避免沒用到就多讀一個檔案。
+        /// 沒有原文檔案、讀取失敗或原文行數不足時回傳 null。
+        /// </summary>
+        public string? GetRawLineText(int lineIndex)
+        {
+            if (_rawFilePath == null) return null;
+
+            if (_rawLines == null)
+            {
+                try
+                {
+                    _rawLines = File.ReadAllLines(_rawFilePath).ToList();
+                }
+                catch
+                {
+                    _rawLines = new List<string>();
+                }
+            }
+
+            return lineIndex >= 0 && lineIndex < _rawLines.Count ? _rawLines[lineIndex] : null;
         }
 
         /// <summary>
