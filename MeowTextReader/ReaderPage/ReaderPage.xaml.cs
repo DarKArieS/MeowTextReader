@@ -23,7 +23,7 @@ namespace MeowTextReader.ReaderPage
         private ReaderPageViewModel ViewModel { get; set; } = new ReaderPageViewModel();
         private ScrollViewer? _scrollViewer;
         private Timer? _debounceTimer;
-        private const int DebounceMilliseconds = 500;
+        private const int DebounceMilliseconds = 1000;
         private bool _isSliderUpdating = false;
         private bool _isScrollViewerUpdating = false;
 

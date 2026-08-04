@@ -11,7 +11,7 @@ namespace MeowTextReader
     public sealed partial class MainWindow : Window
     {
         // 拖曳／縮放過程中 AppWindow.Changed 會連續觸發，延遲寫檔避免頻繁 I/O。
-        private static readonly TimeSpan SaveDelay = TimeSpan.FromMilliseconds(500);
+        private static readonly TimeSpan SaveDelay = TimeSpan.FromMilliseconds(1000);
 
         private readonly DispatcherQueueTimer _savePlacementTimer;
 
@@ -145,6 +145,8 @@ namespace MeowTextReader
             _savePlacementTimer.Stop();
             CaptureRestoreBounds();
             SaveWindowPlacement();
+            // 設定檔平常由背景 writer 延遲寫入，程式關閉時來不及跑完，這裡同步落地。
+            MainRepo.Instance.Flush();
         }
 
         private void OnThemeChanged()

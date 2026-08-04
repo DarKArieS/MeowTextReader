@@ -8,6 +8,7 @@ using System.Text;
 using System.Text.Encodings.Web;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using System.Threading.Tasks;
 using Windows.Storage;
 using MeowTextReader.Repo.Chapter;
 using MeowTextReader.Repo.Model;
@@ -21,6 +22,20 @@ namespace MeowTextReader.Repo
 
         private readonly string _saveFilePath;
         private AppConfig _config = new();
+
+        // _lock 保護 _config 本身以及底下兩個旗標；_fileLock 只保護「實際落地」這個動作，
+        // 讓背景 writer 與 Flush() 不會同時寫同一個檔，同時避免持有 _lock 做慢速 I/O。
+        private readonly object _lock = new();
+        private readonly object _fileLock = new();
+        private bool _pendingSave;
+        private bool _writerRunning;
+
+        // 合併視窗。UI 層（捲動、視窗位置）已各有 1 秒 debounce，這裡再壓一層，
+        // 把「開檔時連寫兩次」「顏色輸入框每個按鍵一次」這類連發合併成單次寫入。
+        private const int CoalesceDelayMs = 500;
+
+        /// <summary>設定檔寫入失敗時觸發。目前只用於診斷輸出，之後要在 UI 上提示可掛這個事件。</summary>
+        public static event Action<Exception>? SaveFailed; 
 
         private MainRepo()
         {
@@ -418,10 +433,113 @@ namespace MeowTextReader.Repo
             Converters = { new JsonStringEnumConverter() }
         };
 
+        /// <summary>
+        /// 標記設定有變更，實際的序列化與寫檔交給背景 writer。呼叫端（通常是 UI 執行緒）
+        /// 立即返回，不會被磁碟 I/O 卡住；<see cref="CoalesceDelayMs"/> 內的多次呼叫會合併成一次寫入。
+        /// </summary>
         private void SaveConfig()
         {
-            var json = JsonSerializer.Serialize(_config, SaveJsonOptions);
-            File.WriteAllText(_saveFilePath, json, Utf8NoBom);
+            lock (_lock)
+            {
+                _pendingSave = true;
+                if (_writerRunning) return; // 已有 writer 在跑，它會撿走這次變更
+                _writerRunning = true;
+            }
+
+            _ = Task.Run(WriterLoopAsync);
+        }
+
+        private async Task WriterLoopAsync()
+        {
+            while (true)
+            {
+                await Task.Delay(CoalesceDelayMs);
+
+                // _fileLock 要涵蓋「序列化 + 落地」整段，不能只包落地：否則 Flush() 可能在
+                // _pendingSave 已被清掉、但這份 json 還沒寫出去的空檔看到「沒有待寫變更」而直接返回，
+                // 關閉程式時就會漏掉最後一次變更。
+                lock (_fileLock)
+                {
+                    string json;
+                    lock (_lock)
+                    {
+                        if (!_pendingSave)
+                        {
+                            // 結束條件與 SaveConfig 的 _writerRunning 檢查在同一把鎖內，
+                            // 不會出現「writer 剛收工、同時有新變更進來卻沒人處理」的漏窗。
+                            _writerRunning = false;
+                            return;
+                        }
+
+                        _pendingSave = false;
+                        json = JsonSerializer.Serialize(_config, SaveJsonOptions);
+                    }
+
+                    // 寫檔期間進來的 SaveConfig 只會設 _pendingSave，由下一輪迴圈撿走。
+                    WriteAtomic(json);
+                }
+            }
+        }
+
+        /// <summary>
+        /// 先寫暫存檔再原子替換，避免寫到一半中斷時把使用者的閱讀進度與章節快取一起毀掉。
+        /// 寫入失敗不往外拋：呼叫端有可能是 ScrollViewer_ViewChanged 這種 UI 事件，
+        /// 讓例外冒出去會變成 UI 執行緒未處理例外。
+        /// </summary>
+        private void WriteAtomic(string json)
+        {
+            lock (_fileLock)
+            {
+                var tmp = _saveFilePath + ".tmp";
+                try
+                {
+                    File.WriteAllText(tmp, json, Utf8NoBom);
+                    if (File.Exists(_saveFilePath))
+                        File.Replace(tmp, _saveFilePath, null);
+                    else
+                        File.Move(tmp, _saveFilePath);
+                }
+                catch (Exception ex)
+                {
+                    // 不重試：檔案可能被使用者用編輯器鎖住，重試迴圈只會空轉。
+                    // 下一次真正的設定變更自然會再寫一次。
+                    Debug.WriteLine($"[MainRepo] 設定檔寫入失敗: {ex}");
+                    try
+                    {
+                        if (File.Exists(tmp)) File.Delete(tmp);
+                    }
+                    catch
+                    {
+                        // 清不掉暫存檔也沒關係，下次寫入會覆蓋它。
+                    }
+
+                    SaveFailed?.Invoke(ex);
+                }
+            }
+        }
+
+        /// <summary>
+        /// 把還沒寫出去的變更立刻同步寫入。用於程式關閉，或外部（編輯器）要讀這個檔案之前。
+        /// </summary>
+        public void Flush()
+        {
+            // 先搶 _fileLock：背景 writer 手上若已有一份還沒落地的 json，這裡會等它寫完，
+            // 才不會誤判成「沒有待寫變更」而漏掉最後一次寫入。lock 是可重入的，
+            // 底下的 WriteAtomic 再拿一次同一把鎖沒有問題。
+            lock (_fileLock)
+            {
+                string json;
+                lock (_lock)
+                {
+                    // 沒有待寫變更、而且檔案已經存在時才可以省略；否則仍要寫出一份，
+                    // 讓「用編輯器開啟設定檔」在從未存檔過的情況下也有東西可開。
+                    if (!_pendingSave && File.Exists(_saveFilePath)) return;
+                    _pendingSave = false;
+                    json = JsonSerializer.Serialize(_config, SaveJsonOptions);
+                }
+
+                WriteAtomic(json);
+            }
         }
 
         private void LoadConfig()
@@ -464,7 +582,9 @@ namespace MeowTextReader.Repo
             if (result == IDYES)
             {
                 _config = new AppConfig();
-                SaveConfig();
+                // 這裡跑在建構子（App 啟動早期），另一個分支還會 Environment.Exit，
+                // 不能仰賴背景 writer，直接同步寫出去。
+                WriteAtomic(JsonSerializer.Serialize(_config, SaveJsonOptions));
             }
             else
             {

@@ -2,7 +2,6 @@
 using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
-using System.Text;
 using System.Threading;
 using Windows.Foundation;
 using Windows.Storage;
@@ -22,7 +21,7 @@ namespace MeowTextReader.MainPage
     {
         private MainPageViewModel ViewModel { get; set; } = new MainPageViewModel();
         private Timer? _debounceTimer;
-        private const int DebounceMilliseconds = 500;
+        private const int DebounceMilliseconds = 1000;
 
         /// <summary>
         /// 目前位置要存到哪個資料夾底下。切換資料夾時 ViewModel.FolderPath 會先被改掉，
@@ -196,14 +195,12 @@ namespace MeowTextReader.MainPage
         {
             try
             {
-                var path = MainRepo.Instance.SaveFilePath;
-                if (!File.Exists(path))
-                {
-                    File.WriteAllText(path, "{}", new UTF8Encoding(encoderShouldEmitUTF8Identifier: false));
-                }
+                // 平常是背景延遲寫入，先同步落地一次，確保編輯器看到的是最新內容
+                // （順帶保證檔案存在，不必再自己寫一份空的 "{}" 上去）。
+                MainRepo.Instance.Flush();
                 Process.Start(new ProcessStartInfo
                 {
-                    FileName = path,
+                    FileName = MainRepo.Instance.SaveFilePath,
                     UseShellExecute = true
                 });
             }
