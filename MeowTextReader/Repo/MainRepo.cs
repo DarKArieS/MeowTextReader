@@ -9,7 +9,6 @@ using System.Text.Encodings.Web;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
-using Windows.Storage;
 using MeowTextReader.Repo.Chapter;
 using MeowTextReader.Repo.Model;
 
@@ -20,7 +19,9 @@ namespace MeowTextReader.Repo
         private static readonly Lazy<MainRepo> _instance = new(() => new MainRepo());
         public static MainRepo Instance => _instance.Value;
 
-        private readonly string _saveFilePath;
+        // 使用者可以在「Config Setting」裡改設定檔位置，所以不是 readonly；
+        // 變更只會發生在 MoveSaveLocationTo 裡，且全程持有 _fileLock。
+        private string _saveFilePath;
         private AppConfig _config = new();
 
         // _lock 保護 _config 本身以及底下兩個旗標；_fileLock 只保護「實際落地」這個動作，
@@ -39,35 +40,18 @@ namespace MeowTextReader.Repo
 
         private MainRepo()
         {
-            _saveFilePath = GetSaveFilePath();
+            _saveFilePath = ConfigLocation.Resolve();
             LoadConfig();
         }
 
-        private static string GetSaveFilePath()
+        /// <summary>設定 json 檔案的完整路徑，供外部（例如以編輯器打開）使用。</summary>
+        public string SaveFilePath
         {
-            // 打包(MSIX)應用程式呼叫 Environment.GetFolderPath(LocalApplicationData) 時，
-            // 系統會將路徑重新導向到套件的虛擬容器內，這個路徑只有本行程看得到；
-            // 外部程式（例如記事本）用同一個字串路徑打開時會找不到檔案。
-            // Windows.Storage.ApplicationData.Current.LocalFolder.Path 回傳的才是實體、
-            // 外部程式也能存取到的路徑（%LOCALAPPDATA%\Packages\<PackageFamilyName>\LocalState），
-            // 所以優先使用它；未打包執行（例如單元測試、非 MSIX 部署）時再退回原本的方式。
-            string folder;
-            try
-            {
-                folder = ApplicationData.Current.LocalFolder.Path;
-            }
-            catch
-            {
-                folder = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
-            }
-            string appFolder = Path.Combine(folder, "MeowTextReader");
-            if (!Directory.Exists(appFolder))
-                Directory.CreateDirectory(appFolder);
-            return Path.Combine(appFolder, "appConfig.json");
+            get { lock (_fileLock) { return _saveFilePath; } }
         }
 
-        /// <summary>設定 json 檔案的完整路徑，供外部（例如以編輯器打開）使用。</summary>
-        public string SaveFilePath => _saveFilePath;
+        /// <summary>設定 json 檔案所在的資料夾。</summary>
+        public string SaveFolderPath => Path.GetDirectoryName(SaveFilePath) ?? ConfigLocation.DefaultFolder;
 
         public string? FolderPath
         {
@@ -490,31 +474,43 @@ namespace MeowTextReader.Repo
         {
             lock (_fileLock)
             {
-                var tmp = _saveFilePath + ".tmp";
                 try
                 {
-                    File.WriteAllText(tmp, json, Utf8NoBom);
-                    if (File.Exists(_saveFilePath))
-                        File.Replace(tmp, _saveFilePath, null);
-                    else
-                        File.Move(tmp, _saveFilePath);
+                    WriteAtomicCore(_saveFilePath, json);
                 }
                 catch (Exception ex)
                 {
                     // 不重試：檔案可能被使用者用編輯器鎖住，重試迴圈只會空轉。
                     // 下一次真正的設定變更自然會再寫一次。
                     Debug.WriteLine($"[MainRepo] 設定檔寫入失敗: {ex}");
-                    try
-                    {
-                        if (File.Exists(tmp)) File.Delete(tmp);
-                    }
-                    catch
-                    {
-                        // 清不掉暫存檔也沒關係，下次寫入會覆蓋它。
-                    }
-
                     SaveFailed?.Invoke(ex);
                 }
+            }
+        }
+
+        private static void WriteAtomicCore(string path, string json)
+        {
+            var tmp = path + ".tmp";
+            try
+            {
+                File.WriteAllText(tmp, json, Utf8NoBom);
+                if (File.Exists(path))
+                    File.Replace(tmp, path, null);
+                else
+                    File.Move(tmp, path);
+            }
+            catch
+            {
+                try
+                {
+                    if (File.Exists(tmp)) File.Delete(tmp);
+                }
+                catch
+                {
+                    // 清不掉暫存檔也沒關係，下次寫入會覆蓋它。
+                }
+
+                throw;
             }
         }
 
@@ -539,6 +535,67 @@ namespace MeowTextReader.Repo
                 }
 
                 WriteAtomic(json);
+            }
+        }
+
+        /// <summary>
+        /// 把設定檔搬到新位置：目前記憶體裡的設定寫過去，成功後刪掉舊檔並記住新路徑。
+        /// 記憶體狀態完全不動，所以不需要重新啟動。失敗會往外拋，此時舊檔與舊路徑都還在。
+        /// </summary>
+        public void MoveSaveLocationTo(string newPath)
+        {
+            lock (_fileLock)
+            {
+                var oldPath = _saveFilePath;
+                if (string.Equals(Path.GetFullPath(oldPath), Path.GetFullPath(newPath),
+                        StringComparison.OrdinalIgnoreCase))
+                {
+                    return;
+                }
+
+                string json;
+                lock (_lock)
+                {
+                    _pendingSave = false;
+                    json = JsonSerializer.Serialize(_config, SaveJsonOptions);
+                }
+
+                var dir = Path.GetDirectoryName(newPath);
+                if (!string.IsNullOrEmpty(dir))
+                    Directory.CreateDirectory(dir);
+
+                // 順序很重要：先把內容寫到新位置，再改指標，最後才刪舊檔。
+                // 任何一步失敗都還留著一份完整的設定，不會兩頭落空。
+                WriteAtomicCore(newPath, json);
+                ConfigLocation.Save(newPath);
+                _saveFilePath = newPath;
+
+                try
+                {
+                    if (File.Exists(oldPath)) File.Delete(oldPath);
+                }
+                catch (Exception ex)
+                {
+                    // 舊檔刪不掉不影響運作，留著當備份也無妨。
+                    Debug.WriteLine($"[MainRepo] 舊設定檔刪除失敗: {ex}");
+                }
+            }
+        }
+
+        /// <summary>
+        /// 檢查指定檔案是不是一份解析得動的設定檔。給「變更位置」時判斷目標要載入還是覆蓋用。
+        /// </summary>
+        public static bool IsValidConfigFile(string path)
+        {
+            try
+            {
+                var json = File.ReadAllText(path, Utf8NoBom);
+                if (string.IsNullOrWhiteSpace(json)) return false;
+                return JsonSerializer.Deserialize<AppConfig>(json, SaveJsonOptions) != null;
+            }
+            catch
+            {
+                return false;
             }
         }
 

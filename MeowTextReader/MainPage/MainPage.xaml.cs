@@ -1,6 +1,5 @@
 ﻿using System;
 using System.ComponentModel;
-using System.Diagnostics;
 using System.IO;
 using System.Threading;
 using Windows.Foundation;
@@ -189,22 +188,6 @@ namespace MeowTextReader.MainPage
         {
             var dialog = new GlobalSettingDialog { XamlRoot = this.XamlRoot };
             await dialog.ShowAsync();
-        }
-
-        private void RawConfig_Click(object sender, RoutedEventArgs e)
-        {
-            try
-            {
-                // 平常是背景延遲寫入，先同步落地一次，確保編輯器看到的是最新內容
-                // （順帶保證檔案存在，不必再自己寫一份空的 "{}" 上去）。
-                MainRepo.Instance.Flush();
-                Process.Start(new ProcessStartInfo
-                {
-                    FileName = MainRepo.Instance.SaveFilePath,
-                    UseShellExecute = true
-                });
-            }
-            catch { }
         }
 
         private void FolderListView_ItemClick(object sender, ItemClickEventArgs e)

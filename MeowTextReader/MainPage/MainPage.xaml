@@ -2,6 +2,7 @@
     x:Class="MeowTextReader.MainPage.MainPage"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:configSetting="using:MeowTextReader.MainPage.ConfigSetting"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:local="using:MeowTextReader.MainPage"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
@@ -42,8 +43,15 @@
                     Margin="8,0,0,0"
                     Orientation="Horizontal"
                     Spacing="8">
-                    <Button Click="GlobalSetting_Click" Content="GlobalSetting" />
-                    <Button Click="RawConfig_Click" Content="RawConfig" />
+                    <Button
+                        x:Name="GlobalSettingButton"
+                        Click="GlobalSetting_Click"
+                        Content="GlobalSetting" />
+                    <Button x:Name="ConfigSettingButton" Content="ConfigSetting">
+                        <Button.Flyout>
+                            <configSetting:ConfigSettingFlyout />
+                        </Button.Flyout>
+                    </Button>
                 </StackPanel>
             </Grid>
             <TextBlock
